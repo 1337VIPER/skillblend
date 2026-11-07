@@ -14,7 +14,7 @@ SkillBlend is a local app for Blender artists who use [Claude Code](https://clau
 
 - **Nothing to fill in.** You don't answer an interview or tag files. SkillBlend sorts your files by technique itself.
 - **Measured, not guessed.** Every rule in the skill comes from your files, with the numbers and how many files they came from.
-- **Original work.** The built-in workflow was written for SkillBlend from its authors' own models, measurements and Blender tests.
+- **Original work.** The built-in workflow is written from SkillBlend's own models, measurements and Blender tests (see [Acknowledgements](#acknowledgements) for where it started).
 - **Gaps are covered.** Any technique your project doesn't show uses a complete, tested built-in workflow.
 - **Local and read-only.** Blender opens your files in the background and never saves them. Nothing is uploaded.
 
@@ -214,6 +214,12 @@ The suite needs Blender and runs end to end in a temporary workspace. It:
 - checks a clean model and a careless one with `style_check.py`;
 - learns a folder and checks that each technique lands on the right file;
 - smoke-tests the app's API and its token check.
+
+## Acknowledgements
+
+Early versions of SkillBlend's built-in workflow (up to commit `d7fb05b`) adapted ideas from two MIT-licensed Claude skills: [arjun988/blender-skills](https://github.com/arjun988/blender-skills) ("hard-surface" and "prop-artist") and [garyhtou/claude-plugins](https://github.com/garyhtou/claude-plugins) ("building-3d-for-web"). Thank you to both authors; their work helped shape where this project started.
+
+Since then the workflow has been rewritten from SkillBlend's own data: bevel widths measured across a 23-asset portfolio, pivot and detail rules from measured files, and export behaviour re-tested in Blender 5.2. Those tests updated one earlier assumption: `shade_auto_smooth` does work headless in current Blender. The current text and numbers are original to this project.
 
 ## License
 
