@@ -1,0 +1,8 @@
+{
+  "subd_levels_viewport": 2,
+  "subd_levels_render": 2,
+  "subd_use_creases": true,
+  "subd_support_ratio": 0.12,
+  "subd_quad_ratio_min": 0.98,
+  "_notes": "subd_use_creases is assumed true (Blender's default; the vehicle loft relies on creases, while the hard-surface SubD standard gets crispness from holding loops and never marks sharps). subd_support_ratio 0.12 is subdkit's hold default (the sources describe holding loops at about 1/10 of the local quad size)."
+}

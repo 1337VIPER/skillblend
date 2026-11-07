@@ -1,0 +1,10 @@
+{
+  "stack_order": [
+    "MIRROR",
+    "SOLIDIFY",
+    "BEVEL",
+    "SUBSURF",
+    "BOOLEAN",
+    "WEIGHTED_NORMAL"
+  ]
+}

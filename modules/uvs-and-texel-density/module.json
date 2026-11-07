@@ -1,0 +1,51 @@
+{
+  "id": "uvs-and-texel-density",
+  "order": 8,
+  "title": "UVs and texel density",
+  "optional": false,
+  "summary": "How you unwrap: seams, island counts, texel density, packing and UV channels.",
+  "request": {
+    "brief": "Submit a game-ready prop with its UVs finished the way you ship them, with the material and texture size you'd use (an image texture node with the right resolution is enough).",
+    "must_include": [
+      "Finished UVs on the mesh you'd export",
+      "Your seams marked if you mark them",
+      "The texture size you target (an image or a note)"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "a crate",
+      "a fire extinguisher",
+      "a weapon part",
+      "a street sign"
+    ]
+  },
+  "questions": [
+    {
+      "key": "texture_size",
+      "ask": "What texture size do you usually target for a prop this size?",
+      "options": [
+        {
+          "label": "1024",
+          "value": 1024
+        },
+        {
+          "label": "2048",
+          "value": 2048
+        },
+        {
+          "label": "4096",
+          "value": 4096
+        }
+      ],
+      "number_key": "texture_size"
+    },
+    {
+      "key": "texel_density",
+      "ask": "Do you work to a fixed texel density? If so, what (px per metre, at which texture size)?"
+    },
+    {
+      "key": "uv_tools",
+      "ask": "Which UV tools do you use? (Blender only, UVPackmaster, RizomUV, Zen UV, other)"
+    }
+  ]
+}

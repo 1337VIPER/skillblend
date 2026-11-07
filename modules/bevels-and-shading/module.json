@@ -1,0 +1,60 @@
+{
+  "id": "bevels-and-shading",
+  "order": 3,
+  "title": "Bevels and shading",
+  "optional": false,
+  "summary": "How you bevel hard edges and set up normals: bevel widths, segments, limits, weighted normals, sharp edges.",
+  "request": {
+    "brief": "Model a mostly boxy hard-surface prop (a junction box, a power supply, a radio body) and shade it exactly the way you ship it: keep your bevel modifiers and normal setup live, don't apply them. Include at least one big chamfer and one small edge so both sizes show.",
+    "must_include": [
+      "Live bevel setup the way you normally use it (modifier, weights or geometry)",
+      "Your normal setup (weighted normals, sharp edges, smooth by angle) left in place",
+      "Both a large and a small bevel"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "junction box",
+      "PC power supply",
+      "walkie-talkie body",
+      "ammo box"
+    ]
+  },
+  "questions": [
+    {
+      "key": "bevel_method",
+      "ask": "How do you usually make bevels?",
+      "options": [
+        {
+          "label": "Live Bevel modifier (angle)",
+          "value": "live bevel modifier limited by angle"
+        },
+        {
+          "label": "Bevel modifier + weights",
+          "value": "bevel modifier limited by bevel weights"
+        },
+        {
+          "label": "Modelled in the mesh",
+          "value": "bevels modelled into the mesh"
+        },
+        {
+          "label": "Mixed",
+          "value": "mixed, depending on the part"
+        }
+      ]
+    },
+    {
+      "key": "apply_before_export",
+      "ask": "Do you apply bevels before export?",
+      "options": [
+        {
+          "label": "Yes, apply on export",
+          "value": true
+        },
+        {
+          "label": "No, they're baked",
+          "value": false
+        }
+      ]
+    }
+  ]
+}

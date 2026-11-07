@@ -1,0 +1,9 @@
+{
+  "tiers": [
+    "primary",
+    "secondary",
+    "tertiary"
+  ],
+  "shape_gate": true,
+  "ref_iou_target": 0.9
+}

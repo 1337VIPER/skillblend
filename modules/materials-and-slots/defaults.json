@@ -1,0 +1,13 @@
+{
+  "slots_per_part": 1,
+  "material_palette": [
+    "Steel",
+    "SteelDark",
+    "PaintDark",
+    "Rubber",
+    "Glass",
+    "Plastic",
+    "Trim"
+  ],
+  "_notes": "Palette taken from the generic setup rules (short, stable PascalCase surface names)."
+}

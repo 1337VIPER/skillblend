@@ -1,0 +1,28 @@
+{
+  "id": "modifier-stacks",
+  "order": 6,
+  "title": "Modifier stacks",
+  "optional": false,
+  "summary": "Your non-destructive habits: which modifiers you stack, in which order, and how you use mirror, array, solidify, screw and skin.",
+  "request": {
+    "brief": "Model a sci-fi part or kit piece entirely with a live modifier stack (don't apply anything): a rail, a pipe run, a greeble strip or a mechanical arm. Use the modifiers you normally reach for, in the order you normally put them.",
+    "must_include": [
+      "Everything left live and unapplied",
+      "At least one mirror, array, solidify, screw or skin modifier if you use them",
+      "Your usual stack order on every part"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "sci-fi rail",
+      "pipe run with clamps",
+      "greeble strip",
+      "robot arm segment"
+    ]
+  },
+  "questions": [
+    {
+      "key": "stack_notes",
+      "ask": "Are there modifiers you always or never use? (e.g. always Weighted Normal last, never Decimate)"
+    }
+  ]
+}

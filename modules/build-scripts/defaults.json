@@ -1,0 +1,4 @@
+{
+  "scripted_builds": true,
+  "_notes": "The generic workflow builds every model from a script so a fix is an edit and a re-run."
+}

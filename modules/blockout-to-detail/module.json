@@ -1,0 +1,54 @@
+{
+  "id": "blockout-to-detail",
+  "order": 2,
+  "title": "Blockout to detail",
+  "optional": false,
+  "summary": "How you go from a reference to a blockout to the finished model: structure first, then tiers of detail.",
+  "request": {
+    "brief": "Model one object twice in the same file: your blockout and your finished version. Put the blockout in a collection named Blockout and the finished model in a collection named Final. If you worked from a reference picture, put it in the file (an image empty or a reference image) or submit it next to the .blend.",
+    "must_include": [
+      "A collection named Blockout with your blockout",
+      "A collection named Final with the finished model",
+      "The reference you used, if any"
+    ],
+    "submit": "One .blend file, plus the reference image if it isn't inside the file.",
+    "ideas": [
+      "a handheld radio",
+      "a power drill",
+      "a desk fan",
+      "a sci-fi crate"
+    ]
+  },
+  "questions": [
+    {
+      "key": "start_from",
+      "ask": "What do you usually start a model from?",
+      "options": [
+        {
+          "label": "Reference photos",
+          "value": "reference photos"
+        },
+        {
+          "label": "My own concept art",
+          "value": "own concept art"
+        },
+        {
+          "label": "Orthographic drawings",
+          "value": "orthographic drawings"
+        },
+        {
+          "label": "Straight in Blender",
+          "value": "no reference"
+        }
+      ]
+    },
+    {
+      "key": "blockout_method",
+      "ask": "How do you block out? (primitives, box modelling, booleans, a kit, something else)"
+    },
+    {
+      "key": "detail_order",
+      "ask": "Which order do you add detail in, and when do you stop adding detail?"
+    }
+  ]
+}

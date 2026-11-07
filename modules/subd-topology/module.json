@@ -1,0 +1,50 @@
+{
+  "id": "subd-topology",
+  "order": 4,
+  "title": "SubD topology",
+  "optional": false,
+  "summary": "How you build subdivision cages: quad flow, support loops, creases, poles and subdivision levels.",
+  "request": {
+    "brief": "Model one SubD hard-surface part with the Subdivision Surface modifier left live: a nozzle, a handle, a hull panel or a helmet piece. Use your normal holding loops or creases. Keep the cage you'd keep (don't apply the subdivision).",
+    "must_include": [
+      "The low cage with a live Subdivision Surface modifier",
+      "Your holding/support loops or creases",
+      "At least one hole, opening or corner that needs controlling"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "thruster nozzle",
+      "game controller shell",
+      "pistol grip",
+      "helmet visor frame"
+    ]
+  },
+  "questions": [
+    {
+      "key": "support_method",
+      "ask": "How do you hold edges on SubD models?",
+      "options": [
+        {
+          "label": "Support loops",
+          "value": "support loops"
+        },
+        {
+          "label": "Edge creases",
+          "value": "edge creases"
+        },
+        {
+          "label": "Bevel then SubD",
+          "value": "bevel modifier before subdivision"
+        },
+        {
+          "label": "Mixed",
+          "value": "mixed"
+        }
+      ]
+    },
+    {
+      "key": "triangles_ok",
+      "ask": "Do you allow triangles or n-gons in SubD cages, and where?"
+    }
+  ]
+}

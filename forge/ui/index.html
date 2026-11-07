@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkillBlend</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IlNraWxsQmxlbmQiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjRkY2QjNEIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzdBNUNGRiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIzMCIgZmlsbD0idXJsKCNzYmcpIi8+CiAgPCEtLSBpc29tZXRyaWMgY3ViZTogdG9wLCBsZWZ0IGFuZCByaWdodCBmYWNlcyAtLT4KICA8cGF0aCBkPSJNNjAgMzAgTDkyIDQ4IEw2MCA2NiBMMjggNDggWiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuOTUiLz4KICA8cGF0aCBkPSJNMjggNDggTDYwIDY2IEw2MCAxMDIgTDI4IDg0IFoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjYyIi8+CiAgPHBhdGggZD0iTTkyIDQ4IEw2MCA2NiBMNjAgMTAyIEw5MiA4NCBaIiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4zNCIvPgogIDwhLS0gYmV2ZWxsZWQgZWRnZSBoaWdobGlnaHQgLS0+CiAgPHBhdGggZD0iTTI4IDQ4IEw2MCA2NiBMOTIgNDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIHNwYXJrOiB0aGUgbGVhcm5lZCBza2lsbCAtLT4KICA8cGF0aCBkPSJNMTAwIDE0IEMxMDEuNiAyMi40IDEwMy42IDI0LjQgMTEyIDI2IEMxMDMuNiAyNy42IDEwMS42IDI5LjYgMTAwIDM4IEM5OC40IDI5LjYgOTYuNCAyNy42IDg4IDI2IEM5Ni40IDI0LjQgOTguNCAyMi40IDEwMCAxNCBaIiBmaWxsPSIjZmZmIi8+Cjwvc3ZnPgo=">
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --ink:#1d1c1a; --muted:#6b6862; --line:#e4e1da; --soft:#efede8;
+  --accent:#e8552c; --accent-ink:#ffffff; --accent-soft:#fbe9df; --ok:#2f7d4f; --ok-soft:#e3f2e8;
+  --warn:#9a6200; --warn-soft:#fdf1d8; --chip:#f1efe9; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#151513; --panel:#1e1d1b; --ink:#eceae5; --muted:#a19d95; --line:#2f2d2a; --soft:#262522;
+  --accent:#ff7a4d; --accent-ink:#1a0c04; --accent-soft:#3a2418; --ok:#6fcf97; --ok-soft:#1d3326;
+  --warn:#f2c066; --warn-soft:#3a2f17; --chip:#2a2926; --shadow:none;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:18px 28px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+.logo{width:34px;height:34px;display:grid;place-items:center}.logo svg{display:block}
+header h1{font-size:17px;margin:0;font-weight:650;letter-spacing:-.01em}
+header .sub{color:var(--muted);font-size:13px}
+.grow{flex:1}
+.pill{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--warn-soft);color:var(--warn)}
+main{max-width:1180px;margin:0 auto;padding:26px 28px 80px}
+.steps{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;font-size:14px}
+.step b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--soft);font-size:12px}
+.step.on{color:var(--ink);border-color:var(--accent)} .step.on b{background:var(--accent);color:var(--accent-ink)}
+.step.done b{background:var(--ok);color:#fff}
+section{display:none} section.on{display:block}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
+h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em} h3{font-size:15px;margin:0}
+p.lead{color:var(--muted);margin:0 0 18px;max-width:760px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=text]{flex:1;min-width:220px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+input[type=text]:focus{outline:2px solid var(--accent);outline-offset:-1px}
+button{font:inherit;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.primary:hover{filter:brightness(1.05)} button:disabled{opacity:.5;cursor:default}
+button.link{border:none;background:none;color:var(--accent);padding:4px 6px}
+.roots{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.root{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;background:var(--soft);font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.root span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);margin-top:12px;transition:.15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.bar{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;margin:12px 0 6px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.muted{color:var(--muted)} .small{font-size:13px} .mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
+.stat{background:var(--soft);border-radius:10px;padding:12px 14px} .stat b{display:block;font-size:22px;letter-spacing:-.02em}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.off td{opacity:.45}
+.tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--chip);color:var(--muted);margin:2px 4px 2px 0;cursor:pointer;border:1px solid transparent;user-select:none}
+.chip.on{background:var(--accent-soft);color:var(--ink);border-color:var(--accent)}
+.chip.pin{border-style:dashed}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+.card header{all:unset;display:flex;align-items:center;gap:10px}
+.badge{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.badge.m{background:var(--ok-soft);color:var(--ok)} .badge.g{background:var(--chip);color:var(--muted)}
+.headline{font-size:14px;font-weight:550;line-height:1.45}
+.card ul{margin:0;padding-left:18px;font-size:13.5px} .card li{margin:3px 0}
+.warn{background:var(--warn-soft);color:var(--warn);border-radius:9px;padding:8px 10px;font-size:13px}
+.nums{display:flex;flex-wrap:wrap;gap:6px}
+.num{font-size:12px;background:var(--soft);border-radius:7px;padding:3px 8px} .num b{font-weight:600}
+details summary{cursor:pointer;color:var(--muted);font-size:13px} details[open] summary{margin-bottom:8px}
+.q{display:flex;flex-direction:column;gap:4px;margin:8px 0} .q label{font-size:13px}
+.q select,.q input{padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:13px}
+.check{display:flex;gap:10px;align-items:flex-start;margin:10px 0} .check input{margin-top:4px}
+.result{border-left:4px solid var(--ok);padding:12px 16px;background:var(--ok-soft);border-radius:8px;margin-top:16px}
+.err{border-left:4px solid var(--warn);padding:10px 14px;background:var(--warn-soft);color:var(--warn);border-radius:8px;margin-top:12px;white-space:pre-wrap}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:20}
+.modal.on{display:flex}
+.modal .box{background:var(--panel);border-radius:14px;width:min(640px,92vw);max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--line)}
+.modal .head{padding:16px 18px;border-bottom:1px solid var(--line)} .modal .list{overflow:auto;padding:8px}
+.modal .item{padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between} .modal .item:hover{background:var(--soft)}
+.modal .foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.hidden{display:none!important}
+@media (max-width:640px){main{padding:16px} header{padding:14px 16px} .cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><svg width="34" height="34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SkillBlend">
+  <defs>
+    <linearGradient id="sbgh" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF6B3D"/>
+      <stop offset="1" stop-color="#7A5CFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#sbgh)"/>
+  <!-- isometric cube: top, left and right faces -->
+  <path d="M60 30 L92 48 L60 66 L28 48 Z" fill="#fff" fill-opacity=".95"/>
+  <path d="M28 48 L60 66 L60 102 L28 84 Z" fill="#fff" fill-opacity=".62"/>
+  <path d="M92 48 L60 66 L60 102 L92 84 Z" fill="#fff" fill-opacity=".34"/>
+  <!-- bevelled edge highlight -->
+  <path d="M28 48 L60 66 L92 48" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- spark: the learned skill -->
+  <path d="M100 14 C101.6 22.4 103.6 24.4 112 26 C103.6 27.6 101.6 29.6 100 38 C98.4 29.6 96.4 27.6 88 26 C96.4 24.4 98.4 22.4 100 14 Z" fill="#fff"/>
+</svg></div>
+  <div><h1>SkillBlend</h1><div class="sub">Learns how your project was built and turns it into a Claude skill</div></div>
+  <div class="grow"></div>
+  <span id="blenderPill" class="pill">Blender…</span>
+</header>
+<main>
+  <div class="steps">
+    <div class="step on" data-s="1"><b>1</b>Your project</div>
+    <div class="step" data-s="2"><b>2</b>What it learned</div>
+    <div class="step" data-s="3"><b>3</b>Build the skill</div>
+  </div>
+
+  <!-- 1 -->
+  <section id="s1" class="on">
+    <div class="panel" id="blenderPanel" hidden>
+      <h3>Where is Blender?</h3>
+      <p class="muted small">SkillBlend runs Blender in the background to read your files. It never saves them.</p>
+      <div class="row"><input type="text" id="blenderPath" placeholder="C:\Program Files\Blender Foundation\Blender 4.2\blender.exe"><button id="saveBlender">Save</button></div>
+    </div>
+    <div class="panel">
+      <h2>Point it at your project</h2>
+      <p class="lead">Add the folder your models live in. Add more folders if your project uses a kit or insert library stored somewhere else. SkillBlend finds every .blend, skips backups, autosaves and old revisions (folders starting with <span class="mono">_</span>), and works out which techniques each file shows.</p>
+      <div class="row"><input type="text" id="rootInput" placeholder="Paste a folder path, e.g. D:\Projects\MyGame\Art"><button id="addRoot">Add folder</button><button id="browseBtn">Browse…</button></div>
+      <div class="roots" id="roots"></div>
+      <div class="drop" id="drop">Or drop .blend files here</div>
+      <div class="row" style="margin-top:16px"><button class="primary" id="learnBtn">Learn my style</button><span class="muted small" id="learnHint"></span></div>
+      <div id="progress" class="hidden">
+        <div class="bar"><i id="barFill"></i></div>
+        <div class="small muted" id="progText"></div>
+      </div>
+      <div id="scanErr"></div>
+    </div>
+    <div class="panel hidden" id="filesPanel">
+      <div class="row"><h2 class="grow">Files it learned from</h2><button class="link" id="toLearned">See what it learned →</button></div>
+      <div class="stats" id="stats"></div>
+      <p class="muted small">Each file is matched to the techniques it shows. Click a technique chip to force it on or off for that file (dashed = your override). Untick a file to leave it out completely.</p>
+      <div class="tablewrap"><table><thead><tr><th style="width:34px"></th><th>File</th><th>Techniques it shows</th><th style="width:80px">Size</th></tr></thead><tbody id="fileRows"></tbody></table></div>
+      <details style="margin-top:12px" id="scriptsBox" class="hidden"><summary id="scriptsSummary">Build scripts</summary><div id="scriptList" class="small"></div></details>
+      <details style="margin-top:12px"><summary id="skipSummary">Skipped</summary><div class="mono muted" id="skipList"></div></details>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="s2">
+    <div class="panel">
+      <h2>Your style</h2>
+      <p class="lead">One card per technique. <b>Measured</b> cards come from your files; <b>generic</b> cards had no file showing that technique and fall back to SkillBlend's built-in workflow. Optional details let you add what a file can't show. Nothing is required.</p>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="row" style="margin-top:18px"><div class="grow"></div><button class="primary" id="toBuild">Build the skill →</button></div>
+  </section>
+
+  <!-- 3 -->
+  <section id="s3">
+    <div class="panel">
+      <h2>Build the skill</h2>
+      <p class="lead">Writes a Claude Code skill with your style card, a <span class="mono">style.py</span> that applies it in Blender, a <span class="mono">style_check.py</span> that checks any model against it, and the full method for every technique.</p>
+      <div class="row"><input type="text" id="skillName" placeholder="Skill name, e.g. my-modelling-style"><input type="text" id="author" placeholder="Credit (optional): your name, studio or handle"></div>
+      <label class="check"><input type="checkbox" id="examples"><span>Include my .blend files as examples inside the skill<br><span class="muted small">Lets Claude study them. Leave off for a light skill, or if you'll share it.</span></span></label>
+      <label class="check hidden" id="kitWrap"><input type="checkbox" id="kitOk"><span>My kit pieces are mine to ship inside the skill<br><span class="muted small">Bought kits usually forbid this. When off, the kit is catalogued (names and sizes) but not copied.</span></span></label>
+      <div class="row" style="margin-top:14px"><button class="primary" id="buildBtn">Build</button><span class="muted small" id="buildHint"></span></div>
+      <div id="buildOut"></div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal"><div class="box">
+  <div class="head"><h3>Choose a folder</h3><div class="mono muted" id="mPath"></div></div>
+  <div class="list" id="mList"></div>
+  <div class="foot"><span class="muted small grow" id="mInfo"></span><button id="mCancel">Cancel</button><button class="primary" id="mPick">Use this folder</button></div>
+</div></div>
+
+<script>
+const TOKEN = "{{TOKEN}}";
+let S = null, roots = [], extra = [], polling = null, step = 1;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const md = s => esc(s).replace(/`([^`]+)`/g, '<span class="mono">$1</span>');
+const size = n => n > 1048576 ? (n/1048576).toFixed(1)+" MB" : Math.max(1, Math.round(n/1024))+" KB";
+
+async function api(path, body, raw){
+  const opt = {headers: {"X-Forge-Token": TOKEN}};
+  if (raw) { opt.method = "POST"; opt.body = raw.body; opt.headers["X-Filename"] = raw.name; }
+  else if (body !== undefined) { opt.method = "POST"; opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+  const r = await fetch(path, opt);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || r.statusText); e.data = j; throw e; }
+  return j;
+}
+
+function go(n){
+  step = n;
+  document.querySelectorAll(".step").forEach(el => el.classList.toggle("on", +el.dataset.s === n));
+  document.querySelectorAll("section").forEach((el, i) => el.classList.toggle("on", i + 1 === n));
+  window.scrollTo({top: 0});
+}
+document.querySelectorAll(".step").forEach(el => el.onclick = () => go(+el.dataset.s));
+$("toLearned").onclick = () => go(2); $("toBuild").onclick = () => go(3);
+
+function renderRoots(){
+  $("roots").innerHTML = [...roots.map(r => ["folder", r]), ...extra.map(f => ["file", f])].map(([k, r], i) =>
+    `<div class="root"><span title="${esc(r)}">${k === "file" ? "📄 " : "📁 "}${esc(r)}</span><button class="link" data-k="${k}" data-v="${esc(r)}">Remove</button></div>`).join("");
+  $("roots").querySelectorAll("button").forEach(b => b.onclick = () => {
+    if (b.dataset.k === "folder") roots = roots.filter(x => x !== b.dataset.v); else extra = extra.filter(x => x !== b.dataset.v);
+    renderRoots();
+  });
+  $("learnBtn").disabled = !(roots.length || extra.length) || !(S && S.blender);
+  $("learnHint").textContent = !(S && S.blender) ? "Set Blender's path first." : (roots.length || extra.length) ? "" : "Add a folder to start.";
+}
+$("addRoot").onclick = () => { const v = $("rootInput").value.trim().replace(/^"|"$/g, ""); if (v && !roots.includes(v)) roots.push(v); $("rootInput").value = ""; renderRoots(); };
+$("rootInput").onkeydown = e => { if (e.key === "Enter") $("addRoot").click(); };
+
+// folder browser
+let mCur = "";
+async function mOpen(p){
+  const j = await api("/api/browse?path=" + encodeURIComponent(p || ""));
+  mCur = j.path; $("mPath").textContent = j.path || "This computer";
+  $("mInfo").textContent = j.path ? `${j.blends} .blend file(s) directly in this folder` : "";
+  $("mPick").disabled = !j.path;
+  const up = j.parent !== null && j.path ? `<div class="item" data-p="${esc(j.parent)}">⬑ Up</div>` : "";
+  $("mList").innerHTML = up + j.dirs.map(d => `<div class="item" data-p="${esc(d.path)}"><span>📁 ${esc(d.name)}</span></div>`).join("") + (j.error ? `<div class="err">${esc(j.error)}</div>` : "");
+  $("mList").querySelectorAll(".item").forEach(el => el.onclick = () => mOpen(el.dataset.p));
+}
+$("browseBtn").onclick = () => { $("modal").classList.add("on"); mOpen(roots[roots.length - 1] || ""); };
+$("mCancel").onclick = () => $("modal").classList.remove("on");
+$("mPick").onclick = () => { if (mCur && !roots.includes(mCur)) roots.push(mCur); $("modal").classList.remove("on"); renderRoots(); };
+
+// drop files
+const drop = $("drop");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", async e => {
+  const files = [...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith(".blend"));
+  if (!files.length) { drop.textContent = "Only .blend files can be added."; return; }
+  for (const f of files) {
+    drop.textContent = `Adding ${f.name}…`;
+    try { const j = await api("/api/upload", null, {name: f.name, body: f}); if (!extra.includes(j.path)) extra.push(j.path); }
+    catch (err) { drop.textContent = err.message; return; }
+  }
+  drop.textContent = "Or drop .blend files here"; renderRoots();
+});
+
+$("saveBlender").onclick = async () => {
+  try { S = await api("/api/config", {blender: $("blenderPath").value.trim().replace(/^"|"$/g, "")}); render(); }
+  catch (e) { alert(e.message); }
+};
+
+$("learnBtn").onclick = async () => {
+  $("scanErr").innerHTML = "";
+  try { await api("/api/scan", {roots, extra_files: extra}); poll(); }
+  catch (e) { $("scanErr").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+};
+
+function poll(){
+  clearInterval(polling);
+  $("progress").classList.remove("hidden"); $("learnBtn").disabled = true;
+  polling = setInterval(async () => {
+    const st = await api("/api/state"); S = st;
+    const p = st.progress;
+    const pct = p.total ? Math.round(100 * p.done / p.total) : (p.phase === "done" ? 100 : 5);
+    $("barFill").style.width = pct + "%";
+    $("progText").textContent = p.phase === "analysing"
+      ? `Reading ${p.done} of ${p.total} new file(s)${p.current.length ? ": " + p.current.join(", ") : ""}`
+      : p.phase.charAt(0).toUpperCase() + p.phase.slice(1) + "…";
+    if (!p.running) {
+      clearInterval(polling);
+      if (p.errors.length) $("scanErr").innerHTML = `<div class="err">${p.errors.map(esc).join("\n")}</div>`;
+      $("progText").textContent = `Done. ${st.project.files.length} file(s) learned.`;
+      render(); renderRoots();
+    }
+  }, 700);
+}
+
+function title(id){ const m = S.modules.find(m => m.id === id); return m ? m.title : id; }
+
+function render(){
+  if (!S) return;
+  $("blenderPill").textContent = S.blender ? "Blender found" : "Blender not found";
+  $("blenderPill").className = "pill " + (S.blender ? "ok" : "bad");
+  $("blenderPill").title = S.blender || "";
+  $("blenderPanel").hidden = !!S.blender;
+  const pr = S.project, files = pr.files;
+  if (!roots.length && !extra.length && (pr.roots.length || pr.extra_files.length)) { roots = [...pr.roots]; extra = [...pr.extra_files]; renderRoots(); }
+  document.querySelector('.step[data-s="1"]').classList.toggle("done", files.length > 0);
+  $("filesPanel").classList.toggle("hidden", !files.length);
+  if (files.length) {
+    const used = files.filter(f => !f.excluded && f.used_by.length);
+    const measured = S.modules.filter(m => m.files);
+    $("stats").innerHTML = [
+      [files.length, "files found"], [used.length, "used"], [measured.length + " / " + S.modules.length, "techniques measured"], [pr.skipped.length, "skipped"]
+    ].map(([a, b]) => `<div class="stat"><b>${esc(a)}</b><span class="muted small">${esc(b)}</span></div>`).join("");
+    $("fileRows").innerHTML = files.map(f => {
+      const chips = S.modules.filter(m => m.id !== "setup-and-scale" || true).map(m => {
+        const on = f.used_by.includes(m.id), pinned = m.id in (f.pinned || {});
+        if (!on && !pinned) return "";
+        const why = f.detected[m.id] || (pinned ? "set by you" : "");
+        return `<span class="chip ${on ? "on" : ""} ${pinned ? "pin" : ""}" title="${esc(why)}" data-sha="${f.sha}" data-m="${m.id}" data-on="${on}">${esc(m.title)}</span>`;
+      }).join("");
+      return `<tr class="${f.excluded ? "off" : ""}"><td><input type="checkbox" ${f.excluded ? "" : "checked"} data-x="${f.sha}" title="Use this file"></td>
+        <td><span class="mono">${esc(f.rel)}</span>${f.analysed === false ? ' <span class="pill bad">not read</span>' : ""}</td>
+        <td>${chips || '<span class="muted small">nothing specific (setup only)</span>'} <button class="link small" data-add="${f.sha}">+</button></td><td class="muted small">${size(f.size)}</td></tr>`;
+    }).join("");
+    $("fileRows").querySelectorAll("input[data-x]").forEach(cb => cb.onchange = async () => { S = await api("/api/file", {sha: cb.dataset.x, excluded: !cb.checked}); render(); });
+    $("fileRows").querySelectorAll(".chip").forEach(ch => ch.onclick = async () => {
+      const f = files.find(x => x.sha === ch.dataset.sha), m = ch.dataset.m, auto = m in f.detected;
+      const next = ch.dataset.on === "true" ? false : true;
+      S = await api("/api/file", {sha: f.sha, module: m, use: next === auto ? null : next}); render();
+    });
+    $("fileRows").querySelectorAll("button[data-add]").forEach(b => b.onclick = async () => {
+      const f = files.find(x => x.sha === b.dataset.add);
+      const opts = S.modules.filter(m => !f.used_by.includes(m.id));
+      const pick = prompt("Add this file to which technique?\n" + opts.map((m, i) => `${i + 1}. ${m.title}`).join("\n"));
+      const m = opts[(+pick || 0) - 1]; if (!m) return;
+      S = await api("/api/file", {sha: f.sha, module: m.id, use: true}); render();
+    });
+    const sc = pr.scripts || [];
+    $("scriptsBox").classList.toggle("hidden", !sc.length);
+    const roleName = {build: "builds a model", kit: "helper kit", tool: "tool (check, render, export)"};
+    $("scriptsSummary").textContent = `Python scripts it read (${sc.length}): ${sc.filter(s => s.role === "build").length} build, ${sc.filter(s => s.role === "kit").length} kit, ${sc.filter(s => s.role === "tool").length} tool`;
+    $("scriptList").innerHTML = sc.map(s => `<div style="margin:4px 0"><span class="mono">${esc(s.rel)}</span> <span class="chip">${roleName[s.role] || s.role}</span>${s.kits.length ? ` <span class="muted">imports ${s.kits.map(esc).join(", ")}</span>` : ""}${s.doc ? `<div class="muted">${esc(s.doc)}</div>` : ""}</div>`).join("");
+    $("skipSummary").textContent = `Skipped (${pr.skipped.length}): backups, autosaves, duplicates and revision folders`;
+    $("skipList").innerHTML = pr.skipped.map(esc).join("<br>");
+  }
+  renderCards();
+  $("skillName").value = $("skillName").value || S.skill_name || "";
+  $("author").value = $("author").value || S.author || "";
+  const kit = S.modules.find(m => m.bundle);
+  $("kitWrap").classList.toggle("hidden", !(kit && kit.files));
+  if (kit) $("kitOk").checked = kit.answers[kit.bundle.answer] === true;
+  document.querySelector('.step[data-s="2"]').classList.toggle("done", files.length > 0);
+  document.querySelector('.step[data-s="3"]').classList.toggle("done", !!S.last_build);
+}
+
+function renderCards(){
+  $("cards").innerHTML = S.modules.map(m => {
+    const measured = m.files > 0;
+    const rules = m.rules.slice(0, 5).map(r => `<li>${md(r)}</li>`).join("");
+    const more = m.rules.length > 5 ? `<details><summary>${m.rules.length - 5} more</summary><ul>${m.rules.slice(5).map(r => `<li>${md(r)}</li>`).join("")}</ul></details>` : "";
+    const nums = Object.entries(m.numbers).slice(0, 8).map(([k, v]) => `<span class="num" title="${esc(m.notes[k] || "")}">${esc(k.replace(/_/g, " "))}: <b>${esc(Array.isArray(v) ? v.join(" > ") : v)}</b></span>`).join("");
+    const warns = m.warnings.map(w => `<div class="warn">${md(w)}</div>`).join("");
+    const qs = m.questions.map(q => {
+      const cur = m.answers[q.key];
+      const field = q.options
+        ? `<select data-m="${m.id}" data-k="${q.key}"><option value="">(not set)</option>${q.options.map(o => `<option value='${esc(JSON.stringify(o.value))}' ${JSON.stringify(cur) === JSON.stringify(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`
+        : `<input data-m="${m.id}" data-k="${q.key}" value="${esc(cur ?? "")}" placeholder="optional">`;
+      return `<div class="q"><label>${esc(q.ask)}</label>${field}</div>`;
+    }).join("");
+    return `<div class="card"><header><h3 class="grow">${esc(m.title)}</h3><span class="badge ${measured ? "m" : "g"}">${measured ? `measured · ${m.files} file${m.files > 1 ? "s" : ""}` : "generic"}</span></header>
+      ${measured ? "" : `<div class="muted small">${esc(m.summary)} No file in the project shows this, so the skill uses the built-in method.${m.optional ? " (Optional technique.)" : ""}</div>`}
+      ${m.headlines.length ? `<div class="headline">${m.headlines.map(md).join(" ")}</div>` : ""}
+      ${rules ? `<ul>${rules}</ul>${more}` : ""}${nums ? `<div class="nums">${nums}</div>` : ""}${warns}
+      ${qs ? `<details><summary>Optional details</summary>${qs}</details>` : ""}</div>`;
+  }).join("");
+  $("cards").querySelectorAll("select,input").forEach(el => el.onchange = async () => {
+    let v = el.value; if (el.tagName === "SELECT") v = v === "" ? null : JSON.parse(v);
+    S = await api("/api/answer", {module: el.dataset.m, key: el.dataset.k, value: v}); render();
+  });
+}
+
+$("kitOk").onchange = async () => {
+  const kit = S.modules.find(m => m.bundle);
+  S = await api("/api/answer", {module: kit.id, key: kit.bundle.answer, value: $("kitOk").checked}); render();
+};
+
+async function build(generic){
+  $("buildBtn").disabled = true; $("buildHint").textContent = "Building…"; $("buildOut").innerHTML = "";
+  try {
+    const r = await api("/api/build", {skill_name: $("skillName").value.trim(), author: $("author").value.trim(),
+                                        examples: $("examples").checked, generic});
+    S.last_build = r; showBuild(r);
+  } catch (e) {
+    if (e.data && e.data.nothing) {
+      $("buildOut").innerHTML = `<div class="err">No file in the project shows any technique yet.\nYou can still build the generic skill: SkillBlend's complete built-in workflow, not personalised.</div><div class="row" style="margin-top:10px"><button class="primary" id="genBtn">Build the generic skill</button></div>`;
+      $("genBtn").onclick = () => build(true);
+    } else $("buildOut").innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  } finally { $("buildBtn").disabled = false; $("buildHint").textContent = ""; }
+}
+$("buildBtn").onclick = () => build(false);
+
+function showBuild(r){
+  const warns = Object.entries(r.warnings || {}).flatMap(([k, ws]) => ws.map(w => `<li>${esc(title(k))}: ${md(w)}</li>`)).join("");
+  $("buildOut").innerHTML = `<div class="result"><b>${r.personal ? "Built your skill" : "Built the generic skill"}: <span class="mono">${esc(r.name)}</span></b>
+    <div class="small" style="margin-top:6px">${r.personal ? `Measured: ${r.covered.map(title).map(esc).join(", ") || "none"}<br>Generic: ${r.generic.map(title).map(esc).join(", ") || "none"}` : "Not personalised."}</div>
+    <div class="mono muted" style="margin-top:6px">${esc(r.dir)}</div>${warns ? `<details style="margin-top:8px"><summary>${Object.values(r.warnings).flat().length} note(s)</summary><ul class="small">${warns}</ul></details>` : ""}
+    <div class="row" style="margin-top:12px"><button class="primary" id="instBtn">Install for Claude Code</button><span class="small muted" id="instOut">${r.installed_at ? "An earlier version is installed." : ""}</span></div></div>`;
+  $("instBtn").onclick = async () => install(false);
+}
+async function install(replace){
+  try {
+    const r = await api("/api/install", {replace});
+    if (r.exists && !replace) {
+      if (confirm(`A skill is already installed at\n${r.path}\n\nReplace it with this build?`)) return install(true);
+      return;
+    }
+    $("instOut").innerHTML = `Installed to <span class="mono">${esc(r.path)}</span>. Start a new Claude Code session to use it.`;
+  } catch (e) { $("instOut").textContent = e.message; }
+}
+
+(async () => {
+  S = await api("/api/state");
+  render(); renderRoots();
+  if (S.progress && S.progress.running) poll();
+  if (S.last_build) showBuild(S.last_build);
+  const h = +(location.hash.match(/step=(\d)/) || [])[1];
+  if (h) go(h); else if (S.project.files.length) go(2);
+})();
+</script>
+</body>
+</html>

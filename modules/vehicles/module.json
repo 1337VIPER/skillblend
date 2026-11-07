@@ -1,0 +1,29 @@
+{
+  "id": "vehicles",
+  "order": 10,
+  "title": "Vehicles",
+  "optional": true,
+  "summary": "How you model cars and other vehicles: proportions, body surfaces, panel gaps, glass, lamps, wheels and the rig.",
+  "request": {
+    "brief": "Submit a vehicle you modelled (an original design): the body shell with its panel gaps, glass and wheels, in the state you'd hand over. A finished body shell alone is fine.",
+    "must_include": [
+      "The body shell",
+      "Wheels",
+      "Panel gaps, glass and lamps if you modelled them",
+      "Your rig or wheel pivots if you set them up"
+    ],
+    "submit": "One .blend file.",
+    "ideas": [
+      "a hatchback",
+      "an off-road buggy",
+      "a pickup truck",
+      "a sci-fi hover car"
+    ]
+  },
+  "questions": [
+    {
+      "key": "vehicle_method",
+      "ask": "How do you build vehicle bodies? (from blueprints, curves and lofts, box modelling, SubD)"
+    }
+  ]
+}

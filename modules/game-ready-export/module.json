@@ -1,0 +1,74 @@
+{
+  "id": "game-ready-export",
+  "order": 9,
+  "title": "Game-ready and export",
+  "optional": false,
+  "summary": "High/low pairs, triangle budgets, LODs, material slots, baking setup and export.",
+  "request": {
+    "brief": "Submit a prop as a high and low pair, named the way you bake them, with your bake cage if you use one and any LODs you'd make. Leave your export-ready low poly exactly as you'd export it.",
+    "must_include": [
+      "The high poly and the low poly of the same prop",
+      "Your high/low naming",
+      "LODs and a cage if you make them",
+      "The low poly's materials and UVs as exported"
+    ],
+    "submit": "One .blend file.",
+    "ideas": [
+      "a gas canister",
+      "a radio",
+      "a toolbox",
+      "a weapon"
+    ]
+  },
+  "questions": [
+    {
+      "key": "baker",
+      "ask": "Where do you bake?",
+      "options": [
+        {
+          "label": "Marmoset Toolbag",
+          "value": "Marmoset Toolbag"
+        },
+        {
+          "label": "Substance Painter",
+          "value": "Substance Painter"
+        },
+        {
+          "label": "Blender",
+          "value": "Blender"
+        },
+        {
+          "label": "I don't bake",
+          "value": "no baking"
+        }
+      ]
+    },
+    {
+      "key": "export_format",
+      "ask": "Which format do you export?",
+      "options": [
+        {
+          "label": "FBX",
+          "value": "FBX"
+        },
+        {
+          "label": "glTF / GLB",
+          "value": "GLB"
+        },
+        {
+          "label": "USD",
+          "value": "USD"
+        },
+        {
+          "label": "OBJ",
+          "value": "OBJ"
+        }
+      ],
+      "number_key": "export_format"
+    },
+    {
+      "key": "tri_budget",
+      "ask": "What triangle budget do you give a hero prop and a background prop?"
+    }
+  ]
+}

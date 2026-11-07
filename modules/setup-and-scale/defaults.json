@@ -1,0 +1,11 @@
+{
+  "unit_system": "METRIC",
+  "scale_length": 1.0,
+  "front_axis": "+X",
+  "up_axis": "Z",
+  "origin": "contact-point",
+  "naming_case": "snake",
+  "naming_prefix": "",
+  "apply_scale": true,
+  "_notes": "naming_case and naming_prefix are inferred: the sources name library parts in snake case (hex_nut_m8) and material slots in PascalCase, and give exported assets the engine prefix (SM_, SK_) rather than a prefix on Blender objects. The rest is stated in the sources (metres, every prop faces +X, origin at the contact point (\"contact-point\": bottom centre for a prop that stands on something; wall, hinge or mounting face otherwise), scale applied)."
+}

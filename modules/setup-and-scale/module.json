@@ -1,0 +1,74 @@
+{
+  "id": "setup-and-scale",
+  "order": 1,
+  "title": "Setup, scale and naming",
+  "optional": false,
+  "summary": "Units, real-world size, which way models face, where origins go, how objects and collections are named.",
+  "request": {
+    "brief": "Model a simple prop at its real size, exactly as you would hand it over: a crate, a toolbox or a table lamp (about 20-60 cm). Name every object and collection the way you always do, set the origins where you want them, and leave transforms as you would deliver them.",
+    "must_include": [
+      "Real-world size in the units you work in",
+      "Your own object and collection names (no Cube.001)",
+      "Origins placed where you put them on a delivered asset",
+      "At least 3 separate parts"
+    ],
+    "submit": "One .blend file. A second prop in a different shape makes the measurements more reliable.",
+    "ideas": [
+      "crate with lid and handles",
+      "toolbox",
+      "table lamp",
+      "fuel can"
+    ]
+  },
+  "questions": [
+    {
+      "key": "front_axis",
+      "ask": "Which way does the front of your models face?",
+      "options": [
+        {
+          "label": "-Y (Blender front view)",
+          "value": "-Y"
+        },
+        {
+          "label": "+Y",
+          "value": "+Y"
+        },
+        {
+          "label": "+X",
+          "value": "+X"
+        },
+        {
+          "label": "-X",
+          "value": "-X"
+        }
+      ],
+      "number_key": "front_axis"
+    },
+    {
+      "key": "engine",
+      "ask": "Which engine or target are your models mainly for?",
+      "options": [
+        {
+          "label": "Unreal Engine",
+          "value": "Unreal Engine"
+        },
+        {
+          "label": "Unity",
+          "value": "Unity"
+        },
+        {
+          "label": "Godot",
+          "value": "Godot"
+        },
+        {
+          "label": "Rendering / film",
+          "value": "rendering"
+        }
+      ]
+    },
+    {
+      "key": "naming_notes",
+      "ask": "Anything about your naming that a file can't show (prefix rules, numbering, language)?"
+    }
+  ]
+}

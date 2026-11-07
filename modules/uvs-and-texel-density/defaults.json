@@ -1,0 +1,6 @@
+{
+  "texel_density_px_per_m": 600,
+  "texture_size": 4096,
+  "uv_margin_px": 8,
+  "_notes": "texel_density_px_per_m 600 is the middle of the sources' 500-650 px/m range for a third-person hero asset (one 4K set per 30-40 m2 of surface); the sources give no single number for every asset."
+}

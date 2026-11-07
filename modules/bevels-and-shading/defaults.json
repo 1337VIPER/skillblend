@@ -1,0 +1,14 @@
+{
+  "bevel_width_ratio": 0.0082,
+  "bevel_width_m": 0.002,
+  "bevel_segments": 3,
+  "bevel_limit_method": "ANGLE",
+  "bevel_angle_deg": 30,
+  "bevel_profile": 0.7,
+  "bevel_harden_normals": false,
+  "bevel_clamp": false,
+  "weighted_normal": true,
+  "weighted_normal_keep_sharp": true,
+  "smooth_angle_deg": 30,
+  "_notes": "bevel_width_ratio is the 'mid' tier of tiers(D) (0.82% of the main body size; fine 0.36%, cutter 1.1%). bevel_width_m is the panel-edge tier (1-3 mm; primary edges 5-20 mm, micro 0.5-1 mm). bevel_harden_normals is assumed false: the sources never set it and use a Weighted Normal modifier last instead."
+}

@@ -1,0 +1,8 @@
+{
+  "wheel_unit": true,
+  "car_wheelbase_of_length": 0.58,
+  "car_wheel_diameter_of_length": 0.143,
+  "car_front_overhang_of_length": 0.21,
+  "car_tumblehome": 0.8,
+  "car_front_axis": "+X"
+}

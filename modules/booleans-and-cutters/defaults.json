@@ -1,0 +1,8 @@
+{
+  "boolean_solver": "EXACT",
+  "cutter_display": "WIRE",
+  "cutter_collection": "Cutters",
+  "cutter_prefix": "Cut_",
+  "boolean_keep_live": true,
+  "_notes": "cutter_prefix is assumed: stackkit names each Boolean modifier 'Cut_<cutter>' but does not prefix cutter objects. boolean_keep_live true follows the live-stack workflow (cuts stay live until game_down + bake); a bake-as-you-go prop applies each cut instead."
+}

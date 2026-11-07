@@ -1,0 +1,28 @@
+{
+  "id": "structure-and-assemblies",
+  "order": 1,
+  "title": "Structure and assemblies",
+  "optional": false,
+  "summary": "How a model is broken into parts and assemblies: part counts, the smallest detail, assembly collections, pivots and sockets, detail density and round-part segments.",
+  "request": {
+    "brief": "Submit a finished, multi-part asset as you deliver it: every part a separate object, organised into your usual collections or hierarchy, with any pivot or socket empties you add.",
+    "must_include": [
+      "A finished asset with its parts kept separate",
+      "Your collections or parenting for assemblies",
+      "Pivot or socket empties if you use them"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "a weapon",
+      "a machine or generator",
+      "a turret",
+      "a vehicle"
+    ]
+  },
+  "questions": [
+    {
+      "key": "assembly_notes",
+      "ask": "How do you decide what becomes its own part or assembly?"
+    }
+  ]
+}

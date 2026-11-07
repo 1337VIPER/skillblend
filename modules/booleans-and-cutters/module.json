@@ -1,0 +1,46 @@
+{
+  "id": "booleans-and-cutters",
+  "order": 5,
+  "title": "Booleans and cutters",
+  "optional": false,
+  "summary": "How you cut openings: boolean solver, live or applied, how cutters are named, displayed, parented and stored.",
+  "request": {
+    "brief": "Model a panel or plate with at least three different openings made the way you make them: a vent grille, a round port and a recessed screw hole or slot. Keep your boolean setup live if that's how you work, and keep your cutters the way you organise them.",
+    "must_include": [
+      "At least 3 openings of different shapes",
+      "Your cutters (if you keep them) named, displayed and organised as usual",
+      "Any cleanup you do after cutting"
+    ],
+    "submit": "One .blend file.",
+    "ideas": [
+      "control panel",
+      "speaker front plate",
+      "server faceplate",
+      "vent cover"
+    ]
+  },
+  "questions": [
+    {
+      "key": "boolean_workflow",
+      "ask": "What happens to booleans in the end?",
+      "options": [
+        {
+          "label": "Stay live until export",
+          "value": "stay live until export"
+        },
+        {
+          "label": "Applied, then cleaned",
+          "value": "applied and cleaned up"
+        },
+        {
+          "label": "Only for the high poly",
+          "value": "only on the high poly for baking"
+        }
+      ]
+    },
+    {
+      "key": "boolean_addon",
+      "ask": "Do you use a boolean add-on (Bool Tool, HardOps, BoxCutter, other)? Which one?"
+    }
+  ]
+}

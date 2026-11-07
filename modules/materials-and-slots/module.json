@@ -1,0 +1,26 @@
+{
+  "id": "materials-and-slots",
+  "order": 7,
+  "title": "Materials and slots",
+  "optional": false,
+  "summary": "The material palette: slot names, how many slots a part and an asset use, shared library materials, procedural or image-based.",
+  "request": {
+    "brief": "Submit a finished asset with its materials assigned the way you ship them (slot names matter more than the shaders).",
+    "must_include": [
+      "Materials assigned on every part",
+      "Your usual slot names"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "a prop with metal, rubber and glass",
+      "a vehicle",
+      "a weapon"
+    ]
+  },
+  "questions": [
+    {
+      "key": "material_notes",
+      "ask": "Do you keep a shared material library or naming list? Anything a file can't show?"
+    }
+  ]
+}

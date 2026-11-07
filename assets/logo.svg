@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SkillBlend">
+  <defs>
+    <linearGradient id="sbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF6B3D"/>
+      <stop offset="1" stop-color="#7A5CFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#sbg)"/>
+  <!-- isometric cube: top, left and right faces -->
+  <path d="M60 30 L92 48 L60 66 L28 48 Z" fill="#fff" fill-opacity=".95"/>
+  <path d="M28 48 L60 66 L60 102 L28 84 Z" fill="#fff" fill-opacity=".62"/>
+  <path d="M92 48 L60 66 L60 102 L92 84 Z" fill="#fff" fill-opacity=".34"/>
+  <!-- bevelled edge highlight -->
+  <path d="M28 48 L60 66 L92 48" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- spark: the learned skill -->
+  <path d="M100 14 C101.6 22.4 103.6 24.4 112 26 C103.6 27.6 101.6 29.6 100 38 C98.4 29.6 96.4 27.6 88 26 C96.4 24.4 98.4 22.4 100 14 Z" fill="#fff"/>
+</svg>

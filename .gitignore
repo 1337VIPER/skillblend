@@ -1,0 +1,5 @@
+workspace/
+tests/fixtures_out/
+__pycache__/
+*.pyc
+*.blend1

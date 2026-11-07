@@ -1,0 +1,46 @@
+{
+  "id": "kit-library",
+  "order": 7,
+  "title": "Kit library and inserts",
+  "optional": false,
+  "summary": "Your kitbash and insert library: which pieces you reuse (screws, bolts, vents, panels, trims) and how you place them.",
+  "request": {
+    "brief": "Submit the kit you actually use: your kitbash or insert library .blend (or a sample of the 10-30 pieces you use most). Also submit one model where you used those pieces, so the way you place, scale and instance them shows.",
+    "must_include": [
+      "Your kit or insert pieces (asset-marked or not)",
+      "One model that uses them",
+      "Only pieces you made yourself or have the right to share inside a skill"
+    ],
+    "submit": "Two .blend files: the kit and a model using it. Kits you bought may have licences that forbid redistribution; say so and they'll be catalogued but not copied into the skill.",
+    "ideas": [
+      "screws, bolts and rivets",
+      "vents and grilles",
+      "hatches and panels",
+      "pipes, clamps and connectors"
+    ]
+  },
+  "questions": [
+    {
+      "key": "kit_redistribute",
+      "ask": "Can your kit pieces be copied into the skill you build?",
+      "options": [
+        {
+          "label": "Yes, I made them",
+          "value": true
+        },
+        {
+          "label": "No, catalogue only",
+          "value": false
+        }
+      ]
+    },
+    {
+      "key": "kit_placement",
+      "ask": "How do you place inserts? (snapping, an add-on such as KIT OPS, by hand, scripts)"
+    }
+  ],
+  "bundle": {
+    "answer": "kit_redistribute",
+    "to": "kit"
+  }
+}

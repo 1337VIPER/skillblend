@@ -1,0 +1,10 @@
+{
+  "high_suffix": "_high",
+  "low_suffix": "_low",
+  "high_low_tri_ratio": 7.0,
+  "lod_count": 3,
+  "max_material_slots": 8,
+  "triangulate_before_export": true,
+  "export_format": "FBX",
+  "_notes": "Assumed (common professional defaults, not in the sources): high_suffix/low_suffix (the sources say HIGH/LOW and use '_lo' only for library insert variants), lod_count, max_material_slots (a finished studied prop used seven flat materials), triangulate_before_export. high_low_tri_ratio 7.0 is the measured live-stack bake-down (68.9k to 9.8k tris). FBX is the sources' engine export format (GLB only for web review)."
+}

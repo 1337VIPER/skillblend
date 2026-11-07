@@ -1,0 +1,6 @@
+{
+  "one_part_one_object": true,
+  "round_segments": 32,
+  "assembly_collections": true,
+  "_notes": "round_segments is assumed (a common hard-surface default); the rest follows the generic rule 'one real part = one object'."
+}
