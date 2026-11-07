@@ -1,9 +1,9 @@
 {
   "id": "subd-topology",
   "order": 4,
-  "title": "SubD topology",
+  "title": "SubD modelling",
   "optional": false,
-  "summary": "How you build subdivision cages: quad flow, support loops, creases, poles and subdivision levels.",
+  "summary": "How you build subdivision models: subdivision levels, support loops, creases and clean quad flow.",
   "request": {
     "brief": "Model one SubD hard-surface part with the Subdivision Surface modifier left live: a nozzle, a handle, a hull panel or a helmet piece. Use your normal holding loops or creases. Keep the cage you'd keep (don't apply the subdivision).",
     "must_include": [

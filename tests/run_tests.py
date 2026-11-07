@@ -147,7 +147,7 @@ def main():
     check(code == 200 and len(st["project"]["files"]) == len(proj["files"]), "app state lists the learned files")
     check(get("/api/state", token=False)[0] == 403, "app refuses calls without the token")
     page = urllib.request.urlopen(base + "/").read().decode()
-    check(app.token in page and "Learn my style" in page, "app page is served with its token")
+    check(app.token in page and "Learn how I model" in page, "app page is served with its token")
     httpd.shutdown()
 
     print("install")

@@ -225,7 +225,7 @@ def cmd_build(ws, mods, a):
     try:
         res = buildlib.build(ws, name=a.name, author=a.author, generic=a.generic,
                              exclude=[x for x in (a.exclude or "").split(",") if x],
-                             include_examples=not a.no_examples, out_dir=a.out)
+                             include_examples=bool(getattr(a, "examples", False)) and not a.no_examples, out_dir=a.out)
     except buildlib.NothingSubmitted as exc:
         print(str(exc))
         return 2
@@ -355,7 +355,9 @@ def main(argv=None):
     s = sp.add_parser("skip", help="skip a module (it stays generic)"); s.add_argument("module"); s.add_argument("--undo", action="store_true"); s.set_defaults(f=cmd_skip)
     s = sp.add_parser("build", help="build the skill")
     s.add_argument("--name"); s.add_argument("--author"); s.add_argument("--generic", action="store_true", help="build the generic skill, ignoring submissions")
-    s.add_argument("--exclude", help="comma-separated module ids to leave out"); s.add_argument("--no-examples", action="store_true", help="don't copy submitted files into the skill")
+    s.add_argument("--exclude", help="comma-separated module ids to leave out")
+    s.add_argument("--examples", action="store_true", help="copy your .blend files and build scripts into the skill so Claude can study them")
+    s.add_argument("--no-examples", action="store_true", help=argparse.SUPPRESS)
     s.add_argument("--out"); s.add_argument("--json", action="store_true"); s.set_defaults(f=cmd_build)
     for name, fn, hlp in (("install", cmd_install, "copy a built skill into Claude Code's skills folder"),
                           ("install-driver", cmd_install_driver, "install the skill that lets Claude run the SkillBlend interview")):
@@ -366,7 +368,8 @@ def main(argv=None):
     s = sp.add_parser("learn", help="learn the style of a whole project folder (finds and sorts the .blend files itself)")
     s.add_argument("folder", nargs="+", help="project folder(s); add your kit library's folder or file too"); s.add_argument("--workers", type=int); s.add_argument("--build", action="store_true", help="build the skill right after")
     s.add_argument("--name"); s.add_argument("--author"); s.add_argument("--generic", action="store_true", help=argparse.SUPPRESS)
-    s.add_argument("--exclude"); s.add_argument("--no-examples", action="store_true"); s.add_argument("--out"); s.add_argument("--json", action="store_true")
+    s.add_argument("--exclude"); s.add_argument("--examples", action="store_true"); s.add_argument("--no-examples", action="store_true", help=argparse.SUPPRESS)
+    s.add_argument("--out"); s.add_argument("--json", action="store_true")
     s.set_defaults(f=cmd_learn)
     s = sp.add_parser("demo", help="write a small demo project to try SkillBlend on"); s.add_argument("dir", nargs="?"); s.set_defaults(f=cmd_demo)
     s = sp.add_parser("app", help="open the SkillBlend app in your browser"); s.add_argument("--port", type=int, default=4970)

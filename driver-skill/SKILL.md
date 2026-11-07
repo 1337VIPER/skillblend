@@ -9,7 +9,7 @@ The SkillBlend CLI is `python "{{FORGE}}"`. Every command below is that plus a s
 
 ## 0. Pick the route
 - **Default: learn the project.** If the artist has existing work (or doesn't want to be interviewed), don't interview them. Either:
-  - **App:** start `app` in the background (`python "{{FORGE}}" app`), which opens http://127.0.0.1:4970. Tell them to add their project folder (plus any kit library folder), press "Learn my style", review the cards and build. Or
+  - **App:** start `app` in the background (`python "{{FORGE}}" app`), which opens http://127.0.0.1:4970. Tell them to add their project folder (plus any kit library folder), press "Learn how I model", check the cards, then "Make my skill" and "Install for Claude Code". Or
   - **CLI:** `learn "<project folder>" ["<kit folder>" ...]`, then `report`, then `build --name "..."` and `install "<dir>"`. Read the report critically before building (see 2.3), and tell them which techniques are measured and which stay generic.
 - **Guided interview** only when the artist wants to make example models on purpose, or asks to be interviewed. Then follow sections 1-3.
 
@@ -35,7 +35,7 @@ The artist can submit more than one file per module; more files make the medians
 - When they're done (or want to stop): `build --json` (add `--name "..."` if they named the skill, or `--exclude vehicles` if they don't model vehicles and don't want that section).
 - **Exit code 2 / "No models have been submitted"**: ask whether they want the generic skill. Only on a yes, run `build --generic --json`. The generic skill is SkillBlend's built-in workflow. It's complete and tested, but it isn't personalised; say so.
 - Summarise the result: which modules are measured, which are generic, and any warnings.
-- The kit-library module copies kit files into the skill only if `kit_redistribute` was answered true. Never change that answer for them. Submitted files are copied into `examples/` unless they pass `--no-examples` (suggest it if the files are private or large).
+- The kit-library module copies kit files into the skill only if `kit_redistribute` was answered true. Never change that answer for them. Their files are copied into `examples/` only with `--examples`. Ask first, and suggest leaving it off if the files are private or large or the skill will be shared.
 - Install with `install "<dir>"` (add `--force` to replace an earlier build, after they agree). It installs to `~/.claude/skills/`; use `--scope project --project-dir DIR` to install into one project instead. Tell them to start a new Claude Code session to load it.
 
 ## Rules

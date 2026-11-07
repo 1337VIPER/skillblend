@@ -3,7 +3,7 @@
   "order": 5,
   "title": "Booleans and cutters",
   "optional": false,
-  "summary": "How you cut openings: boolean solver, live or applied, how cutters are named, displayed, parented and stored.",
+  "summary": "How you cut holes and openings: boolean settings, and how you name, hide and organise cutters.",
   "request": {
     "brief": "Model a panel or plate with at least three different openings made the way you make them: a vent grille, a round port and a recessed screw hole or slot. Keep your boolean setup live if that's how you work, and keep your cutters the way you organise them.",
     "must_include": [

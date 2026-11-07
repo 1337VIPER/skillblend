@@ -1,9 +1,9 @@
 {
   "id": "build-scripts",
   "order": 0,
-  "title": "Build scripts",
+  "title": "Python build scripts",
   "optional": true,
-  "summary": "Whether models are built from Python (bpy) scripts, which helper kit those scripts use, and which operations the artist reaches for most.",
+  "summary": "Whether you build models with Python scripts, which helper kit those scripts use, and the functions you reach for most.",
   "source": "scripts",
   "request": {
     "brief": "If you build or finish models with Python scripts, include them in your project folder next to the .blend files they make (or submit them). SkillBlend reads them as text, never runs them.",

@@ -1,9 +1,9 @@
 {
   "id": "kit-library",
   "order": 7,
-  "title": "Kit library and inserts",
+  "title": "Kitbash and insert library",
   "optional": false,
-  "summary": "Your kitbash and insert library: which pieces you reuse (screws, bolts, vents, panels, trims) and how you place them.",
+  "summary": "Your library of reusable pieces (screws, bolts, vents, panels) and how you place them on models.",
   "request": {
     "brief": "Submit the kit you actually use: your kitbash or insert library .blend (or a sample of the 10-30 pieces you use most). Also submit one model where you used those pieces, so the way you place, scale and instance them shows.",
     "must_include": [

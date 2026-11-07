@@ -1,9 +1,9 @@
 {
   "id": "materials-and-slots",
   "order": 7,
-  "title": "Materials and slots",
+  "title": "Materials",
   "optional": false,
-  "summary": "The material palette: slot names, how many slots a part and an asset use, shared library materials, procedural or image-based.",
+  "summary": "Your material names, which ones you reuse across models, and how many materials a part gets.",
   "request": {
     "brief": "Submit a finished asset with its materials assigned the way you ship them (slot names matter more than the shaders).",
     "must_include": [

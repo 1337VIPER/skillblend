@@ -3,7 +3,7 @@
   "order": 6,
   "title": "Modifier stacks",
   "optional": false,
-  "summary": "Your non-destructive habits: which modifiers you stack, in which order, and how you use mirror, array, solidify, screw and skin.",
+  "summary": "Which modifiers you stack and in what order: mirror, array, solidify, bevel, subdivision, weighted normal and the rest.",
   "request": {
     "brief": "Model a sci-fi part or kit piece entirely with a live modifier stack (don't apply anything): a rail, a pipe run, a greeble strip or a mechanical arm. Use the modifiers you normally reach for, in the order you normally put them.",
     "must_include": [

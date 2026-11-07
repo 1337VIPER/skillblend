@@ -7,88 +7,126 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IlNraWxsQmxlbmQiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzYmciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjRkY2QjNEIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzdBNUNGRiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIzMCIgZmlsbD0idXJsKCNzYmcpIi8+CiAgPCEtLSBpc29tZXRyaWMgY3ViZTogdG9wLCBsZWZ0IGFuZCByaWdodCBmYWNlcyAtLT4KICA8cGF0aCBkPSJNNjAgMzAgTDkyIDQ4IEw2MCA2NiBMMjggNDggWiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuOTUiLz4KICA8cGF0aCBkPSJNMjggNDggTDYwIDY2IEw2MCAxMDIgTDI4IDg0IFoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjYyIi8+CiAgPHBhdGggZD0iTTkyIDQ4IEw2MCA2NiBMNjAgMTAyIEw5MiA4NCBaIiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4zNCIvPgogIDwhLS0gYmV2ZWxsZWQgZWRnZSBoaWdobGlnaHQgLS0+CiAgPHBhdGggZD0iTTI4IDQ4IEw2MCA2NiBMOTIgNDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8IS0tIHNwYXJrOiB0aGUgbGVhcm5lZCBza2lsbCAtLT4KICA8cGF0aCBkPSJNMTAwIDE0IEMxMDEuNiAyMi40IDEwMy42IDI0LjQgMTEyIDI2IEMxMDMuNiAyNy42IDEwMS42IDI5LjYgMTAwIDM4IEM5OC40IDI5LjYgOTYuNCAyNy42IDg4IDI2IEM5Ni40IDI0LjQgOTguNCAyMi40IDEwMCAxNCBaIiBmaWxsPSIjZmZmIi8+Cjwvc3ZnPgo=">
 <style>
 :root{
-  --bg:#f6f5f2; --panel:#ffffff; --ink:#1d1c1a; --muted:#6b6862; --line:#e4e1da; --soft:#efede8;
-  --accent:#e8552c; --accent-ink:#ffffff; --accent-soft:#fbe9df; --ok:#2f7d4f; --ok-soft:#e3f2e8;
-  --warn:#9a6200; --warn-soft:#fdf1d8; --chip:#f1efe9; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+  --bg:#f7f6f3; --bg2:#fbfaf8; --panel:#ffffff; --ink:#1c1b19; --muted:#6d6a64; --faint:#9a968e; --line:#e7e3dc; --soft:#f1eee9;
+  --coral:#ff6b3d; --violet:#7a5cff; --accent:#e8552c; --accent-ink:#fff; --accent-soft:#fdeee6;
+  --ok:#23804c; --ok-soft:#e4f3ea; --std:#5a5f75; --std-soft:#eef0f6; --warn:#9a5d00; --warn-soft:#fdf2db;
+  --shadow:0 1px 2px rgba(20,18,14,.05),0 8px 24px rgba(20,18,14,.05);
+  --grad:linear-gradient(120deg,var(--coral),var(--violet));
 }
 @media (prefers-color-scheme: dark){:root{
-  --bg:#151513; --panel:#1e1d1b; --ink:#eceae5; --muted:#a19d95; --line:#2f2d2a; --soft:#262522;
-  --accent:#ff7a4d; --accent-ink:#1a0c04; --accent-soft:#3a2418; --ok:#6fcf97; --ok-soft:#1d3326;
-  --warn:#f2c066; --warn-soft:#3a2f17; --chip:#2a2926; --shadow:none;}}
+  --bg:#131312; --bg2:#171716; --panel:#1d1c1a; --ink:#efece6; --muted:#a8a39a; --faint:#7c776f; --line:#2e2c29; --soft:#252421;
+  --accent:#ff7a4d; --accent-ink:#1b0b03; --accent-soft:#3a2219; --ok:#6fd49b; --ok-soft:#1b3326; --std:#b3b8cf; --std-soft:#24262f;
+  --warn:#f3c26b; --warn-soft:#3a2f17; --shadow:none;}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{display:flex;align-items:center;gap:14px;padding:18px 28px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
-.logo{width:34px;height:34px;display:grid;place-items:center}.logo svg{display:block}
-header h1{font-size:17px;margin:0;font-weight:650;letter-spacing:-.01em}
-header .sub{color:var(--muted);font-size:13px}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.top{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.top .in{max-width:1180px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand b{font-size:18px;letter-spacing:-.02em}
+.brand span{display:block;color:var(--muted);font-size:13px}
 .grow{flex:1}
-.pill{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.pill{font-size:12.5px;padding:5px 11px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap;display:inline-flex;gap:6px;align-items:center}
 .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--warn-soft);color:var(--warn)}
-main{max-width:1180px;margin:0 auto;padding:26px 28px 80px}
-.steps{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
-.step{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;font-size:14px}
-.step b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--soft);font-size:12px}
-.step.on{color:var(--ink);border-color:var(--accent)} .step.on b{background:var(--accent);color:var(--accent-ink)}
-.step.done b{background:var(--ok);color:#fff}
-section{display:none} section.on{display:block}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
-h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em} h3{font-size:15px;margin:0}
-p.lead{color:var(--muted);margin:0 0 18px;max-width:760px}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+main{max-width:1180px;margin:0 auto;padding:28px 28px 90px}
+/* stepper */
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:26px}
+.st{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--panel);border:1px solid var(--line);cursor:pointer;transition:.15s;text-align:left;font:inherit;color:inherit}
+.st:hover{border-color:var(--faint)}
+.st i{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--soft);font-style:normal;font-weight:700;font-size:13px;color:var(--muted)}
+.st b{display:block;font-size:14.5px} .st span{display:block;font-size:12.5px;color:var(--muted)}
+.st.on{border-color:transparent;box-shadow:0 0 0 2px var(--accent) inset}
+.st.on i{background:var(--grad);color:#fff}
+.st.done i{background:var(--ok);color:#fff}
+section{display:none} section.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:var(--shadow);margin-bottom:18px}
+.hero h1{font-size:28px;line-height:1.2;margin:0 0 8px;letter-spacing:-.025em}
+.hero p{color:var(--muted);margin:0;max-width:720px;font-size:16px}
+h2{font-size:20px;margin:0 0 6px;letter-spacing:-.015em} h3{font-size:15.5px;margin:0}
+.lead{color:var(--muted);margin:0 0 18px;max-width:760px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-input[type=text]{flex:1;min-width:220px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+label.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:240px;font-size:13.5px;font-weight:600}
+input[type=text]{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:var(--bg2);color:var(--ink);font:inherit;font-weight:400}
 input[type=text]:focus{outline:2px solid var(--accent);outline-offset:-1px}
-button{font:inherit;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;cursor:pointer}
-button:hover{border-color:var(--muted)}
-button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
-button.primary:hover{filter:brightness(1.05)} button:disabled{opacity:.5;cursor:default}
-button.link{border:none;background:none;color:var(--accent);padding:4px 6px}
+button{font:inherit;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:10px 15px;cursor:pointer;transition:.12s}
+button:hover{border-color:var(--faint)}
+button.primary{background:var(--grad);border:none;color:#fff;font-weight:650;padding:11px 20px;box-shadow:0 4px 14px rgba(232,85,44,.25)}
+button.primary:hover{filter:brightness(1.06)} button:disabled{opacity:.45;cursor:default;box-shadow:none}
+button.link{border:none;background:none;color:var(--accent);padding:4px 6px;font-weight:600}
+button.big{font-size:16px;padding:13px 24px}
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:18px 0 4px}
+.tip{display:flex;gap:10px;font-size:13.5px;color:var(--muted);background:var(--soft);border-radius:12px;padding:11px 13px}
+.tip svg{flex:none;margin-top:2px;color:var(--accent)}
 .roots{display:flex;flex-direction:column;gap:6px;margin:14px 0}
-.root{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;background:var(--soft);font-family:ui-monospace,Consolas,monospace;font-size:13px}
-.root span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);margin-top:12px;transition:.15s}
+.root{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:11px;background:var(--soft);font-size:14px}
+.root span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:20px;text-align:center;color:var(--muted);margin-top:12px;transition:.15s}
 .drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
-.bar{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;margin:12px 0 6px}
-.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
-.muted{color:var(--muted)} .small{font-size:13px} .mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.bar{height:10px;border-radius:99px;background:var(--soft);overflow:hidden;margin:16px 0 8px}
+.bar i{display:block;height:100%;background:var(--grad);width:0;transition:width .35s}
+.muted{color:var(--muted)} .small{font-size:13px} .mono{font-family:ui-monospace,Consolas,monospace;font-size:.88em}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
-.stat{background:var(--soft);border-radius:10px;padding:12px 14px} .stat b{display:block;font-size:22px;letter-spacing:-.02em}
-table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
-td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
-tr.off td{opacity:.45}
-.tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px}
-.chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--chip);color:var(--muted);margin:2px 4px 2px 0;cursor:pointer;border:1px solid transparent;user-select:none}
-.chip.on{background:var(--accent-soft);color:var(--ink);border-color:var(--accent)}
-.chip.pin{border-style:dashed}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
-.card header{all:unset;display:flex;align-items:center;gap:10px}
-.badge{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap}
-.badge.m{background:var(--ok-soft);color:var(--ok)} .badge.g{background:var(--chip);color:var(--muted)}
-.headline{font-size:14px;font-weight:550;line-height:1.45}
-.card ul{margin:0;padding-left:18px;font-size:13.5px} .card li{margin:3px 0}
-.warn{background:var(--warn-soft);color:var(--warn);border-radius:9px;padding:8px 10px;font-size:13px}
+.stat{background:var(--soft);border-radius:14px;padding:14px 16px} .stat b{display:block;font-size:26px;letter-spacing:-.03em;line-height:1.1}
+.stat span{font-size:13px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;padding:10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:1}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.off td{opacity:.42}
+.tablewrap{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:14px}
+.tag{display:inline-block;font-size:12.5px;padding:3px 9px;border-radius:99px;background:var(--accent-soft);color:var(--ink);margin:2px 4px 2px 0;cursor:pointer;border:1px solid transparent;user-select:none}
+.tag:hover{border-color:var(--accent)} .tag.pin{border:1px dashed var(--accent)}
+.tag.plain{background:var(--soft);color:var(--muted);cursor:default}
+details summary{cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:600} details[open]>summary{margin-bottom:8px}
+/* cards */
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px;color:var(--muted);margin-top:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.card:before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:var(--line)}
+.card.mine:before{background:var(--grad)}
+.ch{display:flex;align-items:center;gap:12px}
+.ico{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--soft);color:var(--muted)}
+.card.mine .ico{background:var(--accent-soft);color:var(--accent)}
+.badge{font-size:12px;font-weight:650;padding:4px 10px;border-radius:99px;white-space:nowrap}
+.badge.m{background:var(--ok-soft);color:var(--ok)} .badge.g{background:var(--std-soft);color:var(--std)}
+.headline{font-size:15px;font-weight:600;line-height:1.5}
+.std{font-size:14px;color:var(--muted)}
+.card ul{margin:0;padding-left:18px;font-size:14px;color:var(--ink)} .card li{margin:4px 0}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fact{background:var(--soft);border-radius:11px;padding:8px 11px}
+.fact.wide{grid-column:1/-1}
+.fact span{display:block;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.fact b{font-size:14px;font-weight:650;word-break:break-word}
+.warn{background:var(--warn-soft);color:var(--warn);border-radius:11px;padding:9px 12px;font-size:13.5px}
+.warn b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.q{display:flex;flex-direction:column;gap:5px;margin:10px 0} .q label{font-size:13.5px}
+.q select,.q input{padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);color:var(--ink);font:inherit;font-size:14px}
 .nums{display:flex;flex-wrap:wrap;gap:6px}
-.num{font-size:12px;background:var(--soft);border-radius:7px;padding:3px 8px} .num b{font-weight:600}
-details summary{cursor:pointer;color:var(--muted);font-size:13px} details[open] summary{margin-bottom:8px}
-.q{display:flex;flex-direction:column;gap:4px;margin:8px 0} .q label{font-size:13px}
-.q select,.q input{padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:13px}
-.check{display:flex;gap:10px;align-items:flex-start;margin:10px 0} .check input{margin-top:4px}
-.result{border-left:4px solid var(--ok);padding:12px 16px;background:var(--ok-soft);border-radius:8px;margin-top:16px}
-.err{border-left:4px solid var(--warn);padding:10px 14px;background:var(--warn-soft);color:var(--warn);border-radius:8px;margin-top:12px;white-space:pre-wrap}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:20}
+.num{font-size:12px;background:var(--soft);border-radius:7px;padding:3px 8px;font-family:ui-monospace,Consolas,monospace}
+.check{display:flex;gap:12px;align-items:flex-start;margin:14px 0;padding:14px 16px;border:1px solid var(--line);border-radius:14px;cursor:pointer}
+.check:hover{border-color:var(--faint)} .check input{margin-top:4px;width:17px;height:17px;accent-color:var(--accent)}
+.check b{display:block;font-size:14.5px} .check span{color:var(--muted);font-size:13.5px}
+.done-box{border-radius:16px;padding:20px;margin-top:18px;background:var(--ok-soft);border:1px solid transparent}
+.done-box h3{color:var(--ok);font-size:17px;margin-bottom:6px}
+.try{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.prompt{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
+.prompt q{flex:1;quotes:none;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.err{border-left:4px solid var(--warn);padding:11px 14px;background:var(--warn-soft);color:var(--warn);border-radius:10px;margin-top:12px;white-space:pre-wrap;font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(10,10,10,.45);display:none;align-items:center;justify-content:center;z-index:20}
 .modal.on{display:flex}
-.modal .box{background:var(--panel);border-radius:14px;width:min(640px,92vw);max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--line)}
-.modal .head{padding:16px 18px;border-bottom:1px solid var(--line)} .modal .list{overflow:auto;padding:8px}
-.modal .item{padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between} .modal .item:hover{background:var(--soft)}
-.modal .foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.modal .box{background:var(--panel);border-radius:18px;width:min(660px,92vw);max-height:80vh;display:flex;flex-direction:column;border:1px solid var(--line)}
+.modal .head{padding:18px 20px;border-bottom:1px solid var(--line)} .modal .list{overflow:auto;padding:8px}
+.modal .item{padding:9px 12px;border-radius:9px;cursor:pointer} .modal .item:hover{background:var(--soft)}
+.modal .foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
 .hidden{display:none!important}
-@media (max-width:640px){main{padding:16px} header{padding:14px 16px} .cards{grid-template-columns:1fr}}
+.next{display:flex;justify-content:flex-end;margin-top:20px}
+@media (max-width:720px){main{padding:16px}.top .in{padding:12px 16px}.stepper{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.facts{grid-template-columns:1fr}.hero h1{font-size:23px}}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo"><svg width="34" height="34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SkillBlend">
+<div class="top"><div class="in">
+  <div class="brand"><svg width="38" height="38" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SkillBlend">
   <defs>
     <linearGradient id="sbgh" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#FF6B3D"/>
@@ -104,74 +142,94 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px} details[open] 
   <path d="M28 48 L60 66 L92 48" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
   <!-- spark: the learned skill -->
   <path d="M100 14 C101.6 22.4 103.6 24.4 112 26 C103.6 27.6 101.6 29.6 100 38 C98.4 29.6 96.4 27.6 88 26 C96.4 24.4 98.4 22.4 100 14 Z" fill="#fff"/>
-</svg></div>
-  <div><h1>SkillBlend</h1><div class="sub">Learns how your project was built and turns it into a Claude skill</div></div>
+</svg><div><b>SkillBlend</b><span>Teach Claude to model the way you do</span></div></div>
   <div class="grow"></div>
-  <span id="blenderPill" class="pill">Blender…</span>
-</header>
+  <span id="blenderPill" class="pill"><span class="dot"></span>Looking for Blender…</span>
+</div></div>
+
 <main>
-  <div class="steps">
-    <div class="step on" data-s="1"><b>1</b>Your project</div>
-    <div class="step" data-s="2"><b>2</b>What it learned</div>
-    <div class="step" data-s="3"><b>3</b>Build the skill</div>
+  <div class="stepper">
+    <button class="st on" data-s="1"><i>1</i><div><b>Show it your work</b><span>Pick your project folder</span></div></button>
+    <button class="st" data-s="2"><i>2</i><div><b>See how you model</b><span>Check what it learned</span></div></button>
+    <button class="st" data-s="3"><i>3</i><div><b>Make your skill</b><span>Install it for Claude</span></div></button>
   </div>
 
   <!-- 1 -->
   <section id="s1" class="on">
     <div class="panel" id="blenderPanel" hidden>
-      <h3>Where is Blender?</h3>
-      <p class="muted small">SkillBlend runs Blender in the background to read your files. It never saves them.</p>
-      <div class="row"><input type="text" id="blenderPath" placeholder="C:\Program Files\Blender Foundation\Blender 4.2\blender.exe"><button id="saveBlender">Save</button></div>
+      <h2>Where is Blender installed?</h2>
+      <p class="lead">SkillBlend uses your own copy of Blender (4.2 or newer) to read your files. Paste the path to <span class="mono">blender.exe</span> (Windows), the Blender app (Mac) or the <span class="mono">blender</span> program (Linux).</p>
+      <div class="row"><input type="text" id="blenderPath" placeholder="C:\Program Files\Blender Foundation\Blender 4.2\blender.exe" style="flex:1"><button id="saveBlender">Save</button></div>
     </div>
+
+    <div class="panel hero">
+      <h1>Show SkillBlend your work</h1>
+      <p>Pick the folder where your Blender models live. SkillBlend looks through every file and learns how you build: your bevels, modifier stacks, SubD, booleans, kitbash pieces, materials, UVs and game-ready setup. Then it turns that into a skill, so Claude models the same way you do.</p>
+      <div class="tips">
+        <div class="tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg><div>Your files are <b>only read</b>. They're never changed, saved or uploaded.</div></div>
+        <div class="tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v10H3z"/></svg><div>Keep your kitbash or insert library somewhere else? <b>Add that folder too.</b></div></div>
+        <div class="tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div>Backups, autosaves and folders starting with <span class="mono">_</span> are <b>skipped</b>.</div></div>
+      </div>
+    </div>
+
     <div class="panel">
-      <h2>Point it at your project</h2>
-      <p class="lead">Add the folder your models live in. Add more folders if your project uses a kit or insert library stored somewhere else. SkillBlend finds every .blend, skips backups, autosaves and old revisions (folders starting with <span class="mono">_</span>), and works out which techniques each file shows.</p>
-      <div class="row"><input type="text" id="rootInput" placeholder="Paste a folder path, e.g. D:\Projects\MyGame\Art"><button id="addRoot">Add folder</button><button id="browseBtn">Browse…</button></div>
+      <h2>Your project folders</h2>
+      <div class="row" style="margin-top:12px"><input type="text" id="rootInput" placeholder="Paste a folder, e.g. D:\Art\MyGame\Models" style="flex:1"><button id="addRoot">Add folder</button><button id="browseBtn">Browse…</button></div>
       <div class="roots" id="roots"></div>
-      <div class="drop" id="drop">Or drop .blend files here</div>
-      <div class="row" style="margin-top:16px"><button class="primary" id="learnBtn">Learn my style</button><span class="muted small" id="learnHint"></span></div>
+      <div class="drop" id="drop">…or drop individual .blend files here</div>
+      <div class="row" style="margin-top:18px"><button class="primary big" id="learnBtn">Learn how I model</button><span class="muted small" id="learnHint"></span></div>
       <div id="progress" class="hidden">
         <div class="bar"><i id="barFill"></i></div>
         <div class="small muted" id="progText"></div>
       </div>
       <div id="scanErr"></div>
     </div>
+
     <div class="panel hidden" id="filesPanel">
-      <div class="row"><h2 class="grow">Files it learned from</h2><button class="link" id="toLearned">See what it learned →</button></div>
+      <div class="row"><h2 class="grow">What it read</h2><button class="primary" id="toLearned">See how you model →</button></div>
       <div class="stats" id="stats"></div>
-      <p class="muted small">Each file is matched to the techniques it shows. Click a technique chip to force it on or off for that file (dashed = your override). Untick a file to leave it out completely.</p>
-      <div class="tablewrap"><table><thead><tr><th style="width:34px"></th><th>File</th><th>Techniques it shows</th><th style="width:80px">Size</th></tr></thead><tbody id="fileRows"></tbody></table></div>
-      <details style="margin-top:12px" id="scriptsBox" class="hidden"><summary id="scriptsSummary">Build scripts</summary><div id="scriptList" class="small"></div></details>
-      <details style="margin-top:12px"><summary id="skipSummary">Skipped</summary><div class="mono muted" id="skipList"></div></details>
+      <p class="muted small" style="margin:0 0 12px">Each file is tagged with what it shows. Wrong tag? Click it to remove it, or use <b>+</b> to add one. Untick a file to leave it out completely.</p>
+      <div class="tablewrap"><table><thead><tr><th style="width:38px"></th><th>File</th><th>What it shows</th><th style="width:84px">Size</th></tr></thead><tbody id="fileRows"></tbody></table></div>
+      <details style="margin-top:14px" id="scriptsBox" class="hidden"><summary id="scriptsSummary">Python scripts</summary><div id="scriptList" class="small"></div></details>
+      <details style="margin-top:10px"><summary id="skipSummary">Skipped</summary><div class="mono muted small" id="skipList"></div></details>
     </div>
   </section>
 
   <!-- 2 -->
   <section id="s2">
-    <div class="panel">
-      <h2>Your style</h2>
-      <p class="lead">One card per technique. <b>Measured</b> cards come from your files; <b>generic</b> cards had no file showing that technique and fall back to SkillBlend's built-in workflow. Optional details let you add what a file can't show. Nothing is required.</p>
+    <div class="panel hero">
+      <h1>Here's how you model</h1>
+      <p>Each card is one part of your workflow, written the way your skill will tell Claude to work.</p>
+      <div class="legend" style="margin-top:12px">
+        <span><span class="badge m">✓ 3 files</span> learned from your own models</span>
+        <span><span class="badge g">Standard</span> not in your files yet, so the skill uses SkillBlend's built-in method</span>
+      </div>
     </div>
     <div class="cards" id="cards"></div>
-    <div class="row" style="margin-top:18px"><div class="grow"></div><button class="primary" id="toBuild">Build the skill →</button></div>
+    <div class="next"><button class="primary big" id="toBuild">Make my skill →</button></div>
   </section>
 
   <!-- 3 -->
   <section id="s3">
+    <div class="panel hero">
+      <h1>Make your skill</h1>
+      <p>This packs everything SkillBlend learned into a skill for Claude Code. Once it's installed, ask Claude to model something and it will follow your workflow: your bevel sizes, modifier order, naming and materials. It also checks its own work against your style before showing you.</p>
+    </div>
     <div class="panel">
-      <h2>Build the skill</h2>
-      <p class="lead">Writes a Claude Code skill with your style card, a <span class="mono">style.py</span> that applies it in Blender, a <span class="mono">style_check.py</span> that checks any model against it, and the full method for every technique.</p>
-      <div class="row"><input type="text" id="skillName" placeholder="Skill name, e.g. my-modelling-style"><input type="text" id="author" placeholder="Credit (optional): your name, studio or handle"></div>
-      <label class="check"><input type="checkbox" id="examples"><span>Include my .blend files as examples inside the skill<br><span class="muted small">Lets Claude study them. Leave off for a light skill, or if you'll share it.</span></span></label>
-      <label class="check hidden" id="kitWrap"><input type="checkbox" id="kitOk"><span>My kit pieces are mine to ship inside the skill<br><span class="muted small">Bought kits usually forbid this. When off, the kit is catalogued (names and sizes) but not copied.</span></span></label>
-      <div class="row" style="margin-top:14px"><button class="primary" id="buildBtn">Build</button><span class="muted small" id="buildHint"></span></div>
+      <div class="row">
+        <label class="field">Skill name<input type="text" id="skillName" placeholder="my-modelling-style"></label>
+        <label class="field"><span>Credit <span class="muted" style="font-weight:400">(optional)</span></span><input type="text" id="author" placeholder="Your name, studio or handle"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="examples"><div><b>Put my .blend files inside the skill</b><span>Claude can open them to see exactly how you built things. It makes the skill bigger, so leave it off if you plan to share the skill.</span></div></label>
+      <label class="check hidden" id="kitWrap"><input type="checkbox" id="kitOk"><div><b>My kitbash pieces are mine to share</b><span>Tick this only if you made them. For bought kits, leave it off: the skill lists the pieces by name and size instead of copying them.</span></div></label>
+      <div class="row" style="margin-top:6px"><button class="primary big" id="buildBtn">Make my skill</button><span class="muted small" id="buildHint"></span></div>
       <div id="buildOut"></div>
     </div>
   </section>
 </main>
 
 <div class="modal" id="modal"><div class="box">
-  <div class="head"><h3>Choose a folder</h3><div class="mono muted" id="mPath"></div></div>
+  <div class="head"><h3>Choose a folder</h3><div class="mono muted small" id="mPath"></div></div>
   <div class="list" id="mList"></div>
   <div class="foot"><span class="muted small grow" id="mInfo"></span><button id="mCancel">Cancel</button><button class="primary" id="mPick">Use this folder</button></div>
 </div></div>
@@ -181,8 +239,60 @@ const TOKEN = "{{TOKEN}}";
 let S = null, roots = [], extra = [], polling = null, step = 1;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const md = s => esc(s).replace(/`([^`]+)`/g, '<span class="mono">$1</span>');
 const size = n => n > 1048576 ? (n/1048576).toFixed(1)+" MB" : Math.max(1, Math.round(n/1024))+" KB";
+
+// ---------- plain-language helpers
+const NICE = {BEVEL:"Bevel", SUBSURF:"Subdivision", WEIGHTED_NORMAL:"Weighted Normal", SOLIDIFY:"Solidify", MIRROR:"Mirror",
+  ARRAY:"Array", BOOLEAN:"Boolean", SMOOTH_BY_ANGLE:"Smooth by Angle", NODES:"Geometry Nodes", SKIN:"Skin", SCREW:"Screw",
+  TRIANGULATE:"Triangulate", WELD:"Weld", CURVE:"Curve", DISPLACE:"Displace", SHRINKWRAP:"Shrinkwrap", DECIMATE:"Decimate",
+  EDGE_SPLIT:"Edge Split", SIMPLE_DEFORM:"Simple Deform", WIREFRAME:"Wireframe", LATTICE:"Lattice", DATA_TRANSFER:"Data Transfer",
+  EXACT:"Exact", FAST:"Fast", FLOAT:"Float", DIFFERENCE:"Difference", UNION:"Union", INTERSECT:"Intersect", WIRE:"wireframe",
+  BOUNDS:"bounds", ANGLE:"angle", WEIGHT:"bevel weight", METRIC:"metric", COLLECTION:"collection", FIXED_COUNT:"fixed count",
+  MITER_ARC:"arc", MITER_SHARP:"sharp", TEXTURED:"solid"};
+const nice = s => String(s).replace(/\b[A-Z][A-Z_]{2,}\b/g, w => NICE[w] || w)
+  .replace(/\bthe artist's\b/g, "your").replace(/\bThe artist's\b/g, "Your").replace(/\bthe artist\b/g, "you").replace(/\bThe artist\b/g, "You");
+const md = s => esc(nice(s)).replace(/`([^`]+)`/g, '<span class="mono">$1</span>');
+const mmv = v => v == null ? "" : (v * 1000 >= 10 ? Math.round(v * 1000) : +(v * 1000).toPrecision(2)) + " mm";
+const pct = v => Math.round(v * 100) + "%";
+const yes = v => v ? "Yes" : "No";
+const CASE = {snake:"snake_case", pascal:"PascalCase", camel:"camelCase", kebab:"kebab-case", pascal_underscore:"Pascal_Underscore", mixed_underscore:"Mixed_underscore", lower:"lowercase"};
+// the numbers an artist cares about, with plain labels
+const FACTS = {
+  "build-scripts": [["helper_kits","Helper kit", v => v.slice(0,3).join(", ")], ["top_calls","Most-used functions", v => v.slice(0,5).map(x => x + "()").join(" ")]],
+  "setup-and-scale": [["unit_system","Units", v => v === "METRIC" ? "Metres, real size" : nice(v)], ["naming_case","Naming", v => CASE[v] || v],
+                      ["front_axis","Front faces", v => v], ["origin","Origins", v => String(v).replace("-", " ")], ["apply_scale","Scale applied", yes]],
+  "structure-and-assemblies": [["parts_per_asset","Parts per model", v => v], ["min_detail_mm","Smallest detail", v => v + " mm"],
+                      ["round_segments","Cylinder segments", v => v], ["pivot_empty_prefix","Pivot empties", v => v + "…"]],
+  "bevels-and-shading": [["bevel_tiers_m","Bevel sizes", v => v.map(mmv).join(" · ")], ["bevel_width_m","Typical bevel", mmv],
+                      ["bevel_segments","Bevel segments", v => v], ["bevel_angle_deg","Bevel angle limit", v => v + "°"], ["weighted_normal","Weighted Normal", yes]],
+  "subd-topology": [["subd_levels_viewport","SubD level", (v, n) => v + " (render " + (n.subd_levels_render ?? v) + ")"], ["subd_quad_ratio_min","Quads in cages", v => "≥ " + pct(v)],
+                      ["subd_use_creases","Creases", yes]],
+  "booleans-and-cutters": [["boolean_solver","Boolean solver", nice], ["cutter_display","Cutters shown as", nice], ["cutter_collection","Cutter collection", v => v], ["boolean_keep_live","Kept live", yes]],
+  "modifier-stacks": [["stack_order","Modifier order", v => v.map(nice).join(" → ")]],
+  "kit-library": [["insert_instancing","Inserts placed as", v => String(v).replace("-", " ")]],
+  "materials-and-slots": [["material_palette","Palette", v => v.slice(0,6).join(", ")], ["slots_per_part","Materials per part", v => v]],
+  "uvs-and-texel-density": [["texel_density_px_per_m","Texture detail", v => v + " px per metre"], ["texture_size","Texture size", v => v + " px"],
+                      ["texel_density_range_px_per_m","Across models", v => v[0] + "–" + v[1] + " px/m"]],
+  "game-ready-export": [["high_low_tri_ratio","High vs game mesh", v => v + "× the triangles"], ["lod_count","LOD levels", v => v],
+                      ["max_material_slots","Materials on game mesh", v => v], ["export_format","Export as", v => v]],
+  "vehicles": [["car_wheel_diameter_of_length","Wheel size", v => pct(v) + " of length"]],
+};
+const ICONS = {
+  "build-scripts": '<path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/>',
+  "setup-and-scale": '<path d="M3 21L21 3M7 21v-3M11 21v-5M15 21v-3M3 17h3M3 13h5M3 9h3"/>',
+  "structure-and-assemblies": '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  "blockout-to-detail": '<path d="M4 18h16M6 18V9l6-4 6 4v9"/><path d="M10 18v-5h4v5"/>',
+  "bevels-and-shading": '<path d="M4 20V10a6 6 0 0 1 6-6h10"/><path d="M4 20h16V4"/>',
+  "subd-topology": '<path d="M12 3c5 0 9 4 9 9s-4 9-9 9-9-4-9-9 4-9 9-9z"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
+  "booleans-and-cutters": '<rect x="3" y="3" width="13" height="13" rx="2"/><circle cx="15" cy="15" r="6"/>',
+  "modifier-stacks": '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17l9 5 9-5"/>',
+  "kit-library": '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
+  "materials-and-slots": '<circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.6"/><circle cx="12" cy="7.5" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/>',
+  "uvs-and-texel-density": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
+  "game-ready-export": '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/>',
+  "vehicles": '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 17V12l3-5h9l4 5h2v5"/>',
+};
+const icon = id => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[id] || ICONS["structure-and-assemblies"]}</svg>`;
 
 async function api(path, body, raw){
   const opt = {headers: {"X-Forge-Token": TOKEN}};
@@ -196,58 +306,57 @@ async function api(path, body, raw){
 
 function go(n){
   step = n;
-  document.querySelectorAll(".step").forEach(el => el.classList.toggle("on", +el.dataset.s === n));
+  document.querySelectorAll(".st").forEach(el => el.classList.toggle("on", +el.dataset.s === n));
   document.querySelectorAll("section").forEach((el, i) => el.classList.toggle("on", i + 1 === n));
   window.scrollTo({top: 0});
 }
-document.querySelectorAll(".step").forEach(el => el.onclick = () => go(+el.dataset.s));
+document.querySelectorAll(".st").forEach(el => el.onclick = () => go(+el.dataset.s));
 $("toLearned").onclick = () => go(2); $("toBuild").onclick = () => go(3);
 
 function renderRoots(){
-  $("roots").innerHTML = [...roots.map(r => ["folder", r]), ...extra.map(f => ["file", f])].map(([k, r], i) =>
-    `<div class="root"><span title="${esc(r)}">${k === "file" ? "📄 " : "📁 "}${esc(r)}</span><button class="link" data-k="${k}" data-v="${esc(r)}">Remove</button></div>`).join("");
+  $("roots").innerHTML = [...roots.map(r => ["folder", r]), ...extra.map(f => ["file", f])].map(([k, r]) =>
+    `<div class="root">${k === "file" ? "📄" : "📁"}<span title="${esc(r)}">${esc(r)}</span><button class="link" data-k="${k}" data-v="${esc(r)}">Remove</button></div>`).join("");
   $("roots").querySelectorAll("button").forEach(b => b.onclick = () => {
     if (b.dataset.k === "folder") roots = roots.filter(x => x !== b.dataset.v); else extra = extra.filter(x => x !== b.dataset.v);
     renderRoots();
   });
   $("learnBtn").disabled = !(roots.length || extra.length) || !(S && S.blender);
-  $("learnHint").textContent = !(S && S.blender) ? "Set Blender's path first." : (roots.length || extra.length) ? "" : "Add a folder to start.";
+  $("learnHint").textContent = !(S && S.blender) ? "Tell SkillBlend where Blender is first (above)." : (roots.length || extra.length) ? "Reading takes about a second per file. Files it has seen before are instant." : "Add a folder to start.";
 }
 $("addRoot").onclick = () => { const v = $("rootInput").value.trim().replace(/^"|"$/g, ""); if (v && !roots.includes(v)) roots.push(v); $("rootInput").value = ""; renderRoots(); };
 $("rootInput").onkeydown = e => { if (e.key === "Enter") $("addRoot").click(); };
 
-// folder browser
 let mCur = "";
 async function mOpen(p){
   const j = await api("/api/browse?path=" + encodeURIComponent(p || ""));
   mCur = j.path; $("mPath").textContent = j.path || "This computer";
-  $("mInfo").textContent = j.path ? `${j.blends} .blend file(s) directly in this folder` : "";
+  $("mInfo").textContent = j.path ? (j.blends ? `${j.blends} .blend file(s) in this folder` : "No .blend files directly here (subfolders are searched too)") : "";
   $("mPick").disabled = !j.path;
-  const up = j.parent !== null && j.path ? `<div class="item" data-p="${esc(j.parent)}">⬑ Up</div>` : "";
-  $("mList").innerHTML = up + j.dirs.map(d => `<div class="item" data-p="${esc(d.path)}"><span>📁 ${esc(d.name)}</span></div>`).join("") + (j.error ? `<div class="err">${esc(j.error)}</div>` : "");
+  const up = j.parent !== null && j.path ? `<div class="item" data-p="${esc(j.parent)}">⬑ Up one level</div>` : "";
+  $("mList").innerHTML = up + j.dirs.map(d => `<div class="item" data-p="${esc(d.path)}">📁 ${esc(d.name)}</div>`).join("") + (j.error ? `<div class="err">${esc(j.error)}</div>` : "");
   $("mList").querySelectorAll(".item").forEach(el => el.onclick = () => mOpen(el.dataset.p));
 }
 $("browseBtn").onclick = () => { $("modal").classList.add("on"); mOpen(roots[roots.length - 1] || ""); };
 $("mCancel").onclick = () => $("modal").classList.remove("on");
 $("mPick").onclick = () => { if (mCur && !roots.includes(mCur)) roots.push(mCur); $("modal").classList.remove("on"); renderRoots(); };
 
-// drop files
 const drop = $("drop");
+const dropText = "…or drop individual .blend files here";
 ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", async e => {
   const files = [...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith(".blend"));
-  if (!files.length) { drop.textContent = "Only .blend files can be added."; return; }
+  if (!files.length) { drop.textContent = "Only .blend files can be added here."; return; }
   for (const f of files) {
     drop.textContent = `Adding ${f.name}…`;
     try { const j = await api("/api/upload", null, {name: f.name, body: f}); if (!extra.includes(j.path)) extra.push(j.path); }
     catch (err) { drop.textContent = err.message; return; }
   }
-  drop.textContent = "Or drop .blend files here"; renderRoots();
+  drop.textContent = dropText; renderRoots();
 });
 
 $("saveBlender").onclick = async () => {
-  try { S = await api("/api/config", {blender: $("blenderPath").value.trim().replace(/^"|"$/g, "")}); render(); }
+  try { S = await api("/api/config", {blender: $("blenderPath").value.trim().replace(/^"|"$/g, "")}); render(); renderRoots(); }
   catch (e) { alert(e.message); }
 };
 
@@ -257,21 +366,24 @@ $("learnBtn").onclick = async () => {
   catch (e) { $("scanErr").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
 };
 
+const PHASE = {"finding files": "Finding your .blend files…", hashing: "Checking for duplicates…", analysing: "Reading your files…",
+               "reading build scripts": "Reading your Python scripts…", learning: "Working out how you model…", done: "Done."};
 function poll(){
   clearInterval(polling);
   $("progress").classList.remove("hidden"); $("learnBtn").disabled = true;
   polling = setInterval(async () => {
     const st = await api("/api/state"); S = st;
     const p = st.progress;
-    const pct = p.total ? Math.round(100 * p.done / p.total) : (p.phase === "done" ? 100 : 5);
+    const pct = p.total ? Math.round(100 * p.done / p.total) : (p.phase === "done" ? 100 : 6);
     $("barFill").style.width = pct + "%";
-    $("progText").textContent = p.phase === "analysing"
-      ? `Reading ${p.done} of ${p.total} new file(s)${p.current.length ? ": " + p.current.join(", ") : ""}`
-      : p.phase.charAt(0).toUpperCase() + p.phase.slice(1) + "…";
+    $("progText").textContent = p.phase === "analysing" && p.total
+      ? `Reading file ${Math.min(p.done + 1, p.total)} of ${p.total}${p.current.length ? ": " + p.current.join(", ") : ""}`
+      : (PHASE[p.phase] || p.phase);
     if (!p.running) {
       clearInterval(polling);
-      if (p.errors.length) $("scanErr").innerHTML = `<div class="err">${p.errors.map(esc).join("\n")}</div>`;
-      $("progText").textContent = `Done. ${st.project.files.length} file(s) learned.`;
+      if (p.errors.length) $("scanErr").innerHTML = `<div class="err"><b>Some files couldn't be read:</b>\n${p.errors.map(esc).join("\n")}</div>`;
+      const n = st.project.files.length;
+      $("progText").textContent = n ? `Done. Read ${n} file${n > 1 ? "s" : ""}.` : "No .blend files found in those folders.";
       render(); renderRoots();
     }
   }, 700);
@@ -281,51 +393,50 @@ function title(id){ const m = S.modules.find(m => m.id === id); return m ? m.tit
 
 function render(){
   if (!S) return;
-  $("blenderPill").textContent = S.blender ? "Blender found" : "Blender not found";
+  $("blenderPill").innerHTML = `<span class="dot"></span>${S.blender ? "Blender ready" : "Blender not found"}`;
   $("blenderPill").className = "pill " + (S.blender ? "ok" : "bad");
-  $("blenderPill").title = S.blender || "";
+  $("blenderPill").title = S.blender || "Set the path to Blender below";
   $("blenderPanel").hidden = !!S.blender;
   const pr = S.project, files = pr.files;
   if (!roots.length && !extra.length && (pr.roots.length || pr.extra_files.length)) { roots = [...pr.roots]; extra = [...pr.extra_files]; renderRoots(); }
-  document.querySelector('.step[data-s="1"]').classList.toggle("done", files.length > 0);
+  document.querySelector('.st[data-s="1"]').classList.toggle("done", files.length > 0);
   $("filesPanel").classList.toggle("hidden", !files.length);
   if (files.length) {
     const used = files.filter(f => !f.excluded && f.used_by.length);
-    const measured = S.modules.filter(m => m.files);
+    const mine = S.modules.filter(m => m.files);
     $("stats").innerHTML = [
-      [files.length, "files found"], [used.length, "used"], [measured.length + " / " + S.modules.length, "techniques measured"], [pr.skipped.length, "skipped"]
-    ].map(([a, b]) => `<div class="stat"><b>${esc(a)}</b><span class="muted small">${esc(b)}</span></div>`).join("");
+      [files.length, "files read"], [used.length, "used for learning"], [`${mine.length} of ${S.modules.length}`, "parts of your workflow learned"], [pr.skipped.length, "skipped (backups etc.)"]
+    ].map(([a, b]) => `<div class="stat"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join("");
     $("fileRows").innerHTML = files.map(f => {
-      const chips = S.modules.filter(m => m.id !== "setup-and-scale" || true).map(m => {
+      const tags = S.modules.map(m => {
         const on = f.used_by.includes(m.id), pinned = m.id in (f.pinned || {});
-        if (!on && !pinned) return "";
-        const why = f.detected[m.id] || (pinned ? "set by you" : "");
-        return `<span class="chip ${on ? "on" : ""} ${pinned ? "pin" : ""}" title="${esc(why)}" data-sha="${f.sha}" data-m="${m.id}" data-on="${on}">${esc(m.title)}</span>`;
+        if (!on) return "";
+        const why = f.detected[m.id] || "added by you";
+        return `<span class="tag ${pinned ? "pin" : ""}" title="${esc(why)} · click to remove" data-sha="${f.sha}" data-m="${m.id}" data-on="true">${esc(m.title)}</span>`;
       }).join("");
-      return `<tr class="${f.excluded ? "off" : ""}"><td><input type="checkbox" ${f.excluded ? "" : "checked"} data-x="${f.sha}" title="Use this file"></td>
-        <td><span class="mono">${esc(f.rel)}</span>${f.analysed === false ? ' <span class="pill bad">not read</span>' : ""}</td>
-        <td>${chips || '<span class="muted small">nothing specific (setup only)</span>'} <button class="link small" data-add="${f.sha}">+</button></td><td class="muted small">${size(f.size)}</td></tr>`;
+      return `<tr class="${f.excluded ? "off" : ""}"><td><input type="checkbox" ${f.excluded ? "" : "checked"} data-x="${f.sha}" title="Learn from this file"></td>
+        <td><span class="mono">${esc(f.rel)}</span>${f.analysed === false ? ' <span class="pill bad">couldn\'t read</span>' : ""}</td>
+        <td>${tags || '<span class="tag plain">nothing specific</span>'} <button class="link small" data-add="${f.sha}" title="Add a tag">+</button></td><td class="muted small">${size(f.size)}</td></tr>`;
     }).join("");
     $("fileRows").querySelectorAll("input[data-x]").forEach(cb => cb.onchange = async () => { S = await api("/api/file", {sha: cb.dataset.x, excluded: !cb.checked}); render(); });
-    $("fileRows").querySelectorAll(".chip").forEach(ch => ch.onclick = async () => {
+    $("fileRows").querySelectorAll(".tag[data-m]").forEach(ch => ch.onclick = async () => {
       const f = files.find(x => x.sha === ch.dataset.sha), m = ch.dataset.m, auto = m in f.detected;
-      const next = ch.dataset.on === "true" ? false : true;
-      S = await api("/api/file", {sha: f.sha, module: m, use: next === auto ? null : next}); render();
+      S = await api("/api/file", {sha: f.sha, module: m, use: auto ? false : null}); render();
     });
     $("fileRows").querySelectorAll("button[data-add]").forEach(b => b.onclick = async () => {
       const f = files.find(x => x.sha === b.dataset.add);
-      const opts = S.modules.filter(m => !f.used_by.includes(m.id));
-      const pick = prompt("Add this file to which technique?\n" + opts.map((m, i) => `${i + 1}. ${m.title}`).join("\n"));
+      const opts = S.modules.filter(m => !f.used_by.includes(m.id) && m.id !== "build-scripts");
+      const pick = prompt("Which part of your workflow does this file show?\n\n" + opts.map((m, i) => `${i + 1}. ${m.title}`).join("\n") + "\n\nType a number:");
       const m = opts[(+pick || 0) - 1]; if (!m) return;
       S = await api("/api/file", {sha: f.sha, module: m.id, use: true}); render();
     });
     const sc = pr.scripts || [];
     $("scriptsBox").classList.toggle("hidden", !sc.length);
-    const roleName = {build: "builds a model", kit: "helper kit", tool: "tool (check, render, export)"};
-    $("scriptsSummary").textContent = `Python scripts it read (${sc.length}): ${sc.filter(s => s.role === "build").length} build, ${sc.filter(s => s.role === "kit").length} kit, ${sc.filter(s => s.role === "tool").length} tool`;
-    $("scriptList").innerHTML = sc.map(s => `<div style="margin:4px 0"><span class="mono">${esc(s.rel)}</span> <span class="chip">${roleName[s.role] || s.role}</span>${s.kits.length ? ` <span class="muted">imports ${s.kits.map(esc).join(", ")}</span>` : ""}${s.doc ? `<div class="muted">${esc(s.doc)}</div>` : ""}</div>`).join("");
-    $("skipSummary").textContent = `Skipped (${pr.skipped.length}): backups, autosaves, duplicates and revision folders`;
-    $("skipList").innerHTML = pr.skipped.map(esc).join("<br>");
+    const roleName = {build: "builds a model", kit: "helper kit", tool: "helper tool (checks, renders, export)"};
+    $("scriptsSummary").textContent = `Python scripts it read (${sc.length}): ${sc.filter(s => s.role === "build").length} build models, ${sc.filter(s => s.role === "kit").length} helper kit, ${sc.filter(s => s.role === "tool").length} tools`;
+    $("scriptList").innerHTML = sc.map(s => `<div style="margin:6px 0"><span class="mono">${esc(s.rel)}</span> <span class="tag plain">${roleName[s.role] || s.role}</span>${s.kits.length ? ` <span class="muted">uses ${s.kits.map(esc).join(", ")}</span>` : ""}${s.doc ? `<div class="muted">${esc(s.doc)}</div>` : ""}</div>`).join("");
+    $("skipSummary").textContent = `Skipped files (${pr.skipped.length}): backups, autosaves, copies and revision folders`;
+    $("skipList").innerHTML = pr.skipped.map(esc).join("<br>") || "Nothing skipped.";
   }
   renderCards();
   $("skillName").value = $("skillName").value || S.skill_name || "";
@@ -333,29 +444,46 @@ function render(){
   const kit = S.modules.find(m => m.bundle);
   $("kitWrap").classList.toggle("hidden", !(kit && kit.files));
   if (kit) $("kitOk").checked = kit.answers[kit.bundle.answer] === true;
-  document.querySelector('.step[data-s="2"]').classList.toggle("done", files.length > 0);
-  document.querySelector('.step[data-s="3"]').classList.toggle("done", !!S.last_build);
+  document.querySelector('.st[data-s="2"]').classList.toggle("done", files.length > 0);
+  document.querySelector('.st[data-s="3"]').classList.toggle("done", !!S.last_build);
+}
+
+function facts(m){
+  const out = [];
+  for (const [k, label, f] of FACTS[m.id] || []) {
+    const v = m.numbers[k];
+    if (v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length)) continue;
+    try { const t = f(v, m.numbers); out.push(`<div class="fact${String(t).length > 26 ? " wide" : ""}"><span>${esc(label)}</span><b>${esc(t)}</b></div>`); } catch (e) {}
+  }
+  return out.join("");
 }
 
 function renderCards(){
   $("cards").innerHTML = S.modules.map(m => {
-    const measured = m.files > 0;
-    const rules = m.rules.slice(0, 5).map(r => `<li>${md(r)}</li>`).join("");
-    const more = m.rules.length > 5 ? `<details><summary>${m.rules.length - 5} more</summary><ul>${m.rules.slice(5).map(r => `<li>${md(r)}</li>`).join("")}</ul></details>` : "";
-    const nums = Object.entries(m.numbers).slice(0, 8).map(([k, v]) => `<span class="num" title="${esc(m.notes[k] || "")}">${esc(k.replace(/_/g, " "))}: <b>${esc(Array.isArray(v) ? v.join(" > ") : v)}</b></span>`).join("");
-    const warns = m.warnings.map(w => `<div class="warn">${md(w)}</div>`).join("");
+    const mine = m.files > 0;
+    const head = m.headlines.length ? `<div class="headline">${m.headlines.map(md).join(" ")}</div>` : "";
+    const rules = m.rules.map(r => `<li>${md(r)}</li>`).join("");
+    const fs = mine ? facts(m) : "";
+    const tech = Object.entries(m.numbers).map(([k, v]) => `<span class="num" title="${esc(m.notes[k] || "")}">${esc(k)}: ${esc(Array.isArray(v) ? v.join(" > ") : v)}</span>`).join("");
+    const warns = m.warnings.map(w => `<div class="warn"><b>Worth a look</b>${md(w)}</div>`).join("");
     const qs = m.questions.map(q => {
       const cur = m.answers[q.key];
       const field = q.options
-        ? `<select data-m="${m.id}" data-k="${q.key}"><option value="">(not set)</option>${q.options.map(o => `<option value='${esc(JSON.stringify(o.value))}' ${JSON.stringify(cur) === JSON.stringify(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`
-        : `<input data-m="${m.id}" data-k="${q.key}" value="${esc(cur ?? "")}" placeholder="optional">`;
+        ? `<select data-m="${m.id}" data-k="${q.key}"><option value="">Not set</option>${q.options.map(o => `<option value='${esc(JSON.stringify(o.value))}' ${JSON.stringify(cur) === JSON.stringify(o.value) ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`
+        : `<input data-m="${m.id}" data-k="${q.key}" value="${esc(cur ?? "")}" placeholder="Optional">`;
       return `<div class="q"><label>${esc(q.ask)}</label>${field}</div>`;
     }).join("");
-    return `<div class="card"><header><h3 class="grow">${esc(m.title)}</h3><span class="badge ${measured ? "m" : "g"}">${measured ? `measured · ${m.files} file${m.files > 1 ? "s" : ""}` : "generic"}</span></header>
-      ${measured ? "" : `<div class="muted small">${esc(m.summary)} No file in the project shows this, so the skill uses the built-in method.${m.optional ? " (Optional technique.)" : ""}</div>`}
-      ${m.headlines.length ? `<div class="headline">${m.headlines.map(md).join(" ")}</div>` : ""}
-      ${rules ? `<ul>${rules}</ul>${more}` : ""}${nums ? `<div class="nums">${nums}</div>` : ""}${warns}
-      ${qs ? `<details><summary>Optional details</summary>${qs}</details>` : ""}</div>`;
+    const filesTxt = m.id === "build-scripts" ? `${m.files} script${m.files > 1 ? "s" : ""}` : `${m.files} file${m.files > 1 ? "s" : ""}`;
+    return `<div class="card ${mine ? "mine" : ""}">
+      <div class="ch"><div class="ico">${icon(m.id)}</div><h3 class="grow">${esc(m.title)}</h3>
+        <span class="badge ${mine ? "m" : "g"}" title="${mine ? "Learned from " + filesTxt : "None of your files show this"}">${mine ? "✓ " + filesTxt : "Standard"}</span></div>
+      ${mine ? head : `<div class="std">${esc(m.summary)} None of your files show this yet, so your skill will use SkillBlend's built-in method here.</div>`}
+      ${fs ? `<div class="facts">${fs}</div>` : ""}
+      ${warns}
+      ${mine && rules ? `<details><summary>Everything it noticed (${m.rules.length})</summary><ul>${rules}</ul></details>` : ""}
+      ${qs ? `<details><summary>Tell it more (optional)</summary>${qs}</details>` : ""}
+      ${mine && tech ? `<details><summary>Technical numbers</summary><div class="nums">${tech}</div></details>` : ""}
+    </div>`;
   }).join("");
   $("cards").querySelectorAll("select,input").forEach(el => el.onchange = async () => {
     let v = el.value; if (el.tagName === "SELECT") v = v === "" ? null : JSON.parse(v);
@@ -369,36 +497,50 @@ $("kitOk").onchange = async () => {
 };
 
 async function build(generic){
-  $("buildBtn").disabled = true; $("buildHint").textContent = "Building…"; $("buildOut").innerHTML = "";
+  $("buildBtn").disabled = true; $("buildHint").textContent = "Making your skill…"; $("buildOut").innerHTML = "";
   try {
     const r = await api("/api/build", {skill_name: $("skillName").value.trim(), author: $("author").value.trim(),
                                         examples: $("examples").checked, generic});
     S.last_build = r; showBuild(r);
   } catch (e) {
     if (e.data && e.data.nothing) {
-      $("buildOut").innerHTML = `<div class="err">No file in the project shows any technique yet.\nYou can still build the generic skill: SkillBlend's complete built-in workflow, not personalised.</div><div class="row" style="margin-top:10px"><button class="primary" id="genBtn">Build the generic skill</button></div>`;
+      $("buildOut").innerHTML = `<div class="err">None of your files have been learned yet, so there's nothing personal to put in the skill.\nYou can still make the standard skill: SkillBlend's full built-in workflow, not tailored to you.</div><div class="row" style="margin-top:10px"><button class="primary" id="genBtn">Make the standard skill</button></div>`;
       $("genBtn").onclick = () => build(true);
     } else $("buildOut").innerHTML = `<div class="err">${esc(e.message)}</div>`;
   } finally { $("buildBtn").disabled = false; $("buildHint").textContent = ""; }
 }
 $("buildBtn").onclick = () => build(false);
 
+const TRY = ["Model a sci-fi supply crate the way I do.", "Make a hard-surface flashlight prop, game-ready, in my style.", "Check this model against my style: <path to .blend>"];
 function showBuild(r){
-  const warns = Object.entries(r.warnings || {}).flatMap(([k, ws]) => ws.map(w => `<li>${esc(title(k))}: ${md(w)}</li>`)).join("");
-  $("buildOut").innerHTML = `<div class="result"><b>${r.personal ? "Built your skill" : "Built the generic skill"}: <span class="mono">${esc(r.name)}</span></b>
-    <div class="small" style="margin-top:6px">${r.personal ? `Measured: ${r.covered.map(title).map(esc).join(", ") || "none"}<br>Generic: ${r.generic.map(title).map(esc).join(", ") || "none"}` : "Not personalised."}</div>
-    <div class="mono muted" style="margin-top:6px">${esc(r.dir)}</div>${warns ? `<details style="margin-top:8px"><summary>${Object.values(r.warnings).flat().length} note(s)</summary><ul class="small">${warns}</ul></details>` : ""}
-    <div class="row" style="margin-top:12px"><button class="primary" id="instBtn">Install for Claude Code</button><span class="small muted" id="instOut">${r.installed_at ? "An earlier version is installed." : ""}</span></div></div>`;
-  $("instBtn").onclick = async () => install(false);
+  const mine = r.covered || [], std = r.generic || [];
+  $("buildOut").innerHTML = `<div class="done-box"><h3>${r.personal ? "Your skill is ready" : "The standard skill is ready"}</h3>
+    <div class="small">${r.personal ? `Learned from your files: <b>${mine.map(title).map(esc).join(", ") || "none"}</b>.${std.length ? `<br>Standard method for: ${std.map(title).map(esc).join(", ")}.` : ""}` : "Not tailored to you yet: learn your project to personalise it."}</div>
+    <div class="row" style="margin-top:14px"><button class="primary" id="instBtn">Install for Claude Code</button><span class="small muted" id="instOut">${r.installed_at ? "An earlier version is installed; installing replaces it." : ""}</span></div>
+    <div id="tryBox" class="${r.installed_at ? "" : "hidden"}"></div>
+    <details style="margin-top:12px"><summary>Where the files are</summary><div class="mono small muted">${esc(r.dir)}</div></details></div>`;
+  $("instBtn").onclick = () => install(false);
+  if (r.installed_at) showTry(r.name);
+}
+function showTry(name){
+  $("tryBox").classList.remove("hidden");
+  $("tryBox").innerHTML = `<div class="try"><b>Try it.</b> Start a new Claude Code session and ask:
+    ${TRY.map((t, i) => `<div class="prompt"><q>${esc(t)}</q><button data-i="${i}">Copy</button></div>`).join("")}
+    <span class="small muted">Claude loads <span class="mono">${esc(name)}</span> by itself when you ask for Blender modelling.</span></div>`;
+  $("tryBox").querySelectorAll("button[data-i]").forEach(b => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(TRY[+b.dataset.i]); b.textContent = "Copied"; } catch (e) { b.textContent = "Select and copy"; }
+    setTimeout(() => b.textContent = "Copy", 1500);
+  });
 }
 async function install(replace){
   try {
     const r = await api("/api/install", {replace});
     if (r.exists && !replace) {
-      if (confirm(`A skill is already installed at\n${r.path}\n\nReplace it with this build?`)) return install(true);
+      if (confirm(`A skill with this name is already installed:\n${r.path}\n\nReplace it with this new version?`)) return install(true);
       return;
     }
-    $("instOut").innerHTML = `Installed to <span class="mono">${esc(r.path)}</span>. Start a new Claude Code session to use it.`;
+    $("instOut").innerHTML = `Installed. Claude Code will pick it up in a new session.`;
+    showTry(S.last_build.name);
   } catch (e) { $("instOut").textContent = e.message; }
 }
 

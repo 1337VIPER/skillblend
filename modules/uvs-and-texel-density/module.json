@@ -1,9 +1,9 @@
 {
   "id": "uvs-and-texel-density",
   "order": 8,
-  "title": "UVs and texel density",
+  "title": "UVs and texture detail",
   "optional": false,
-  "summary": "How you unwrap: seams, island counts, texel density, packing and UV channels.",
+  "summary": "How you unwrap: seams, how evenly texture detail is spread, how much of the UV space you fill, and how many pixels per metre you aim for.",
   "request": {
     "brief": "Submit a game-ready prop with its UVs finished the way you ship them, with the material and texture size you'd use (an image texture node with the right resolution is enough).",
     "must_include": [

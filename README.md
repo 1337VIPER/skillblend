@@ -20,8 +20,34 @@ SkillBlend is a local app for Blender artists who use [Claude Code](https://clau
 
 ---
 
+## Install it with one prompt
+
+Already use Claude Code? Paste this in and Claude does the rest: it installs SkillBlend, learns your files and installs your skill. It only stops to ask you a few questions. (Also in [INSTALL_WITH_CLAUDE.md](INSTALL_WITH_CLAUDE.md).)
+
+```text
+Install SkillBlend (https://github.com/1337VIPER/skillblend) and use it to learn how I model in Blender, then make me a skill from it.
+
+1. Ask me where to put it (default: a "skillblend" folder in my home folder) and clone the repo there.
+2. Check that Python 3.9 or newer is available, and find my Blender install (4.2 or newer). If you can't find Blender, ask me for the path. Then run:
+   python skillblend.py config --blender "<path to blender>"
+3. Install the SkillBlend helper skill:
+   python skillblend.py install-driver
+4. Ask me which folder holds my Blender models, and whether I keep a kitbash or insert library in another folder. Then run:
+   python skillblend.py learn "<models folder>" ["<kit folder>"]
+5. Run "python skillblend.py report" and explain to me, in plain language, what it learned about how I model. Point out anything that looks off, and ask whether I want to leave any file out.
+6. Ask me three things: what to call my skill, whether my kitbash pieces are my own work (if yes, run: python skillblend.py answer kit-library kit_redistribute true), and whether to copy my .blend files into the skill so you can study them (if yes, add --examples). Then build and install it:
+   python skillblend.py build --name "<name>" [--examples]
+   python skillblend.py install "<the folder the build printed>"
+7. Tell me to start a new Claude Code session, and give me two example prompts to try my new skill.
+
+Never open, change or save any of my .blend files: SkillBlend only reads them. If I'd rather click through it myself, run "python skillblend.py app" instead of steps 4 to 6 and tell me to follow the three steps in my browser.
+```
+
+Prefer to click through it yourself? See [Quick start](#quick-start).
+
 ## Contents
 
+- [Install it with one prompt](#install-it-with-one-prompt)
 - [Quick start](#quick-start)
 - [Using the app, step by step](#using-the-app-step-by-step)
 - [What you get](#what-you-get)
@@ -54,32 +80,37 @@ Then add `workspace/demo-project` as your project folder in the app.
 
 ## Using the app, step by step
 
-### 1. Your project
+### 1. Show it your work
 
-Add the folder your models live in, by typing or pasting a path or with **Browse…**. Add more folders if your project uses a kit or insert library stored somewhere else. You can also drop `.blend` files straight onto the page. Then press **Learn my style**.
+Add the folder where your models live: paste a path, or use **Browse…**. If your kitbash or insert library is kept somewhere else, add that folder too. You can also drop single `.blend` files onto the page. Then press **Learn how I model**.
 
-<p align="center"><img src="docs/images/step1.png" width="860" alt="Step 1: the project folder and the files SkillBlend learned from"></p>
+<p align="center"><img src="docs/images/step1.png" width="860" alt="Step 1: the project folder and the files SkillBlend read"></p>
 
 SkillBlend then:
 
-- **finds** every `.blend` in those folders and skips backups, autosaves, `.blend1` files, exact duplicates and revision folders (any folder whose name starts with `_`, like `_prev`, `_review` or `_stages`);
-- **reads** each file in Blender running in the background, with no window. Results are cached by file content, so the next scan only reads new or changed files;
-- **reads your Python scripts** as plain text (it never runs them), to find which scripts build models, which helper kit they import and which operations you call most;
-- **sorts** the files: every technique module looks at every file and says whether it shows that technique, and why.
+- **finds** every `.blend` in those folders. It skips backups, autosaves, `.blend1` files, exact copies and revision folders (any folder whose name starts with `_`, like `_prev`, `_review` or `_stages`);
+- **reads** each file in Blender running in the background, with no window. It remembers each file, so next time only new or changed files are read;
+- **reads your Python scripts** as plain text, without running them, to see which ones build models, which helper kit they use and which functions you call most;
+- **tags** each file with what it shows: bevels, SubD, booleans, kitbash pieces, a high/low pair and so on.
 
-The file table shows the result. Each chip is a technique the file shows; hover it to see why. Click a chip to switch a technique off for that file, or use **+** to add one. A dashed chip marks your override. Untick a file to leave it out entirely.
+The **What it read** table shows the tags. Hover a tag to see why it's there. Click a tag to remove it, or use **+** to add one; a dashed tag is one you changed. Untick a file to leave it out entirely.
 
-### 2. What it learned
+### 2. See how you model
 
-One card per technique. **Measured** cards come from your files. **Generic** cards mean no file showed that technique, so the skill uses the built-in method there. Each card leads with a one-line summary, then the measured rules, then the style numbers that go into the skill. Warnings (amber) point out anything that looks off.
+Each card is one part of your workflow. **✓ N files** means it was learned from your own models. **Standard** means none of your files show it yet, so the skill uses SkillBlend's built-in method there. Each card leads with one sentence about how you work, then the key numbers in plain words (bevel sizes, modifier order, texture detail...). **Worth a look** notes (amber) point out anything that seems off. **Everything it noticed** lists the full detail.
 
-<p align="center"><img src="docs/images/step2.png" width="860" alt="Step 2: one card per technique, measured from the project"></p>
+<p align="center"><img src="docs/images/step2.png" width="860" alt="Step 2: one card per part of your workflow"></p>
 
-**Optional details** on each card let you add what a file can't show, such as which way your models face or which baker you use. You don't have to fill any of them in.
+**Tell it more (optional)** on each card lets you add things a file can't show, such as which way your models face or which baker you use. You can skip all of these.
 
-### 3. Build the skill
+### 3. Make your skill
 
-Name the skill and optionally credit yourself. Choose whether to include your `.blend` files as examples inside the skill: this lets Claude study them, but leave it off for a lighter skill or one you'll share. If your kit pieces are yours to ship, tick that box too. Then press **Build** and **Install for Claude Code**. Start a new Claude Code session and the skill is loaded.
+Name your skill and, if you like, add a credit. Then choose:
+
+- **Put my .blend files inside the skill**, so Claude can open them and see exactly how you built things. It makes the skill bigger, so leave it off if you'll share the skill.
+- **My kitbash pieces are mine to share.** Tick this only if you made them yourself.
+
+Press **Make my skill**, then **Install for Claude Code**. SkillBlend then shows a few prompts to try, ready to copy. Start a new Claude Code session and ask away.
 
 <p align="center"><img src="docs/images/step3.png" width="860" alt="Step 3: build and install the skill"></p>
 
@@ -172,7 +203,7 @@ Other commands:
 - `demo` writes the demo project.
 - `analyse` re-reads every file.
 - `build --generic` builds the built-in skill with no files.
-- `build --no-examples` leaves your files out of the skill.
+- `build --examples` copies your `.blend` files and build scripts into the skill so Claude can study them (off by default).
 - `build --exclude vehicles` drops a technique.
 - `install --scope project --project-dir DIR` installs the skill into one project.
 - `python skillblend.py --help` lists everything.

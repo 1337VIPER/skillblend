@@ -3,7 +3,7 @@
   "order": 3,
   "title": "Bevels and shading",
   "optional": false,
-  "summary": "How you bevel hard edges and set up normals: bevel widths, segments, limits, weighted normals, sharp edges.",
+  "summary": "How you bevel hard edges and keep shading clean: bevel sizes, segments, angle limits, weighted normals and sharp edges.",
   "request": {
     "brief": "Model a mostly boxy hard-surface prop (a junction box, a power supply, a radio body) and shade it exactly the way you ship it: keep your bevel modifiers and normal setup live, don't apply them. Include at least one big chamfer and one small edge so both sizes show.",
     "must_include": [

@@ -1,9 +1,9 @@
 {
   "id": "blockout-to-detail",
   "order": 2,
-  "title": "Blockout to detail",
+  "title": "Blockout to final",
   "optional": false,
-  "summary": "How you go from a reference to a blockout to the finished model: structure first, then tiers of detail.",
+  "summary": "How you go from a rough blockout to the finished model, keeping the proportions you set at the start.",
   "request": {
     "brief": "Model one object twice in the same file: your blockout and your finished version. Put the blockout in a collection named Blockout and the finished model in a collection named Final. If you worked from a reference picture, put it in the file (an image empty or a reference image) or submit it next to the .blend.",
     "must_include": [

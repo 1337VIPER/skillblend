@@ -1,9 +1,9 @@
 {
   "id": "setup-and-scale",
   "order": 1,
-  "title": "Setup, scale and naming",
+  "title": "Scale, units and naming",
   "optional": false,
-  "summary": "Units, real-world size, which way models face, where origins go, how objects and collections are named.",
+  "summary": "Real-world size, units, which way models face, where origins go and how you name things.",
   "request": {
     "brief": "Model a simple prop at its real size, exactly as you would hand it over: a crate, a toolbox or a table lamp (about 20-60 cm). Name every object and collection the way you always do, set the origins where you want them, and leave transforms as you would deliver them.",
     "must_include": [

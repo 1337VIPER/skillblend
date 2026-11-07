@@ -3,7 +3,7 @@
   "order": 9,
   "title": "Game-ready and export",
   "optional": false,
-  "summary": "High/low pairs, triangle budgets, LODs, material slots, baking setup and export.",
+  "summary": "High-poly to game mesh: naming, how many triangles the game mesh keeps, LODs, materials on the game mesh and export.",
   "request": {
     "brief": "Submit a prop as a high and low pair, named the way you bake them, with your bake cage if you use one and any LODs you'd make. Leave your export-ready low poly exactly as you'd export it.",
     "must_include": [
