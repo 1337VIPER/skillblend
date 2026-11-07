@@ -1,7 +1,7 @@
 ## Game-Ready Export
 
 - Production work (LOW, bake, UVs, LODs, export) starts only after the user has approved the shape (see blockout-to-detail).
-- Apply modifiers per object BEFORE joining; then mark sharp edges and add weighted normals LAST (auto smooth does nothing headless); merge duplicate material slots. Slot names are the engine's material mapping.
+- Join only after every object's modifiers are applied: a join keeps just the active object's stack and runs it over everything (tested below). Then mark sharps on the mesh data, add the Weighted Normal again, and merge duplicate material slots. Slot names are the engine's material mapping.
 - The LOW follows the HIGH within 3 mm on every visible surface: build every feature that changes the surface (recesses, crowns, ridges, dents) into the LOW too, and measure it. The limit is 0.5% of a module's faces missing at 6 mm.
 - Hidden-face removal on the LOW tests the whole face: sample every corner and edge midpoint, keep a face if ANY sample is outside.
 - Never ship a render stack: drop or lower Subsurf, swap library inserts to `_lo`, and read the triangle table against the budget. A live-stack prop dropped from 68.9k to 9.8k triangles that way.
@@ -30,10 +30,10 @@
 - Dense kitbash hardware becomes a normal-map bake or a cheaper `_lo` insert at game LOD.
 
 ### Export steps
-1. Apply every modifier per object before the join (joining first throws away the other objects' stacks).
+1. Apply every modifier per object, then join. Tested in Blender 5.2: joining a bevelled box (active) with a box carrying Solidify + Array dropped the Solidify and Array entirely, and the active box's Bevel then ran over both.
 2. Apply scale and rotation; real metres for static meshes.
 3. UVs: the origami unwrap (uvs-and-texel-density). Legend cards keep their own UVs.
-4. Mark edges over the sharp angle as sharp in bmesh (auto smooth does nothing headless).
+4. Mark edges over the sharp angle as sharp on the mesh data (`set_sharp_from_angle`), so the smoothing is baked into the export rather than left in a modifier.
 5. Weighted normals last, with Keep Sharp.
 6. Merge duplicate material slots. Slot names are the material mapping, so a new slot name needs a material on the import side. Read the exported slot list before importing.
 7. Triangulate before export so the baker and the engine see the same triangles.
@@ -70,6 +70,3 @@ The user approved the shape before any of the following started. Then:
 - a replica scored against its reference (IoU, openings, feature tiers) with the overlay shown;
 - imported with matching slots, placed, and seen under the game's own lighting;
 - the project's notes record the change (what changed, decisions, lessons).
-
-### Credits
-Export gotchas (apply modifiers before joining, weighted normals last, auto smooth is a no-op headless) are adapted (MIT) from garyhtou/claude-plugins, "building-3d-for-web": https://github.com/garyhtou/claude-plugins/blob/HEAD/plugins/high-fidelity-web/skills/building-3d-for-web/SKILL.md

@@ -114,7 +114,7 @@ Read as manufactured:
 ### Build in tier order
 Render after each tier: primary (outline, thickness, mass), then secondary (openings, parts showing at the edges, pivots and joints), then tertiary (fasteners, grind lines, texture, print). Never fix a primary error with tertiary detail. Each part follows its process's rules (machined: crisp chamfers and cutter-radius pocket corners; sheet metal: constant thickness and bend radius = thickness; moulded: fillets, bosses, parting line; ground steel: sharp grind transitions, a narrow bright edge).
 
-**Tiers by visibility.** Hero objects get every control and label; set dressing gets silhouette, seams and the labels a person would read; anything behind or under stays simple.
+**Spend detail where the camera goes.** Decide early how close the player gets and what they touch. The things they handle or study up close get every control, label and fastener; things seen across a room get their silhouette, seams and the few labels a person would actually read; faces behind, under or inside stay plain. A measured portfolio put about 39 triangles per cm2 into parts under 5 cm against 0.03 into panels over 50 cm (see structure-and-assemblies).
 
 ### Detail on curved surfaces
 A bevelled flat slab reads as sharp where the user wants something rounded, softer and detailed (a pistol grip, for example).
@@ -165,5 +165,3 @@ STRUCTURE (from <reference file or description>)
   review      IoU <value> (<date>), openings <ref>/<model>, flagged slices: ...
 ```
 
-### Credits
-The prop tiers are adapted (MIT) from arjun988/blender-skills, "hard-surface" and "prop-artist": https://github.com/arjun988/blender-skills

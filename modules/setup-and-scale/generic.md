@@ -2,7 +2,7 @@
 
 - Work in metres (Metric, unit scale 1.0) at real-world size. Settle one anchor dimension you are sure of before modelling anything, and size everything else from it.
 - Every prop faces +X at its origin, Z is up. Vehicles also face +X, with Y to the left and the ground at z 0.
-- Put the origin (pivot) at the contact point: on the desk for a desk prop, on the wall for a wall prop, on the hinge line for a door or lid, under the middle of the wheelbase for a car, on the mounting face for a kitbash insert.
+- The exported asset's origin is where the engine will hold it; moving parts and effect points get their own named empties (see "Origins and pivots" below).
 - Apply rotation and scale before export, booleans and bevels. Unapplied or negative object scale is a fault, not a style.
 - Name objects for what they are, in lower snake case (`hex_nut_m8`, `door_l`). Material slot names are the material mapping in the engine, so keep them stable and descriptive (`Steel`, `CarPaint`, `Glass`). Exported assets take the engine's prefix (`SM_` static, `SK_` skeletal).
 - One real part = one object. A part that would be a separate piece in the factory gets its own object, bevel and material slot; two things made as one piece are one solid.
@@ -23,19 +23,20 @@ Pick one **anchor dimension** you are certain of and write it down before you bu
 Every other size comes from the reference, scaled by this one number. When the only reference is a steep perspective view, ask for a straight side view first; a perspective picture shrinks the far end.
 
 ### Axes and facing
-- Props: +X is the front, Z up, origin at the contact point. Write the facing in the model script's docstring.
+- Props: +X is the front, Z up. Write the facing and the origin choice in the model script's docstring.
 - Vehicles: the car faces +X, Y is left, Z up, the ground is z 0, and the origin sits on the ground under the middle of the wheelbase. Rear is -X: a ray cast "from behind" starts at a large negative X (one plate landed on the nose because the ray started at +X).
 - Inserts (screws, nuts, clamps): origin on the mounting point, +Z pointing out of the mount (a nut's +Z points away from the face it sits on), so placing one is "surface point + surface normal".
 - Detail built on a face: build in a local frame (X across the face, Y up the face, Z out of the face), then place the frame. A box's size in that frame is (across, up, out): a display that should be wide across a sloped top is `(wide, short, thick)`.
 
 ### Origins and pivots
-The pivot is where the object touches the world or turns:
-- on the desk or floor (bottom centre of the contact face) for anything that stands;
-- on the wall plane for wall-mounted props;
-- on the hinge line for doors, lids, flaps, levers;
-- at the real mounting face for every part of a modular kit, so assemblies snap together;
-- under the centre of the wheelbase, on the ground, for vehicles.
-Parts of a big model keep their own pivots at their real mounting faces, so each part can export as its own mesh in a modular kit.
+Ask one question per object: *when the engine places, spins or swaps this, around which point should that happen?* Put the origin there.
+
+What SkillBlend measured in a 23-asset portfolio, and what the bundled kits do:
+- **While building**, parts keep their origin at their own centre (1,372 of 1,829 parts), which makes scripted placement simple.
+- **Moving and effect points** are marked with named empties instead of moving part origins: 200 `PIVOT_*` empties (lamps, flares, hatches, turret yaw) in the same portfolio.
+- **Vehicles** (`scripts/carkit.py`): the root sits on the ground under the middle of the wheelbase; each wheel turns about its own centre; doors swing on their hinge empties.
+- **Inserts** (`scripts/build_inserts.py`): the origin is on the face the part mounts to, with +Z pointing away from it, so placing one is "surface point plus surface normal".
+- **The exported asset** gets the origin it will be placed by in the level: the point where it meets the ground or the surface it hangs on.
 
 ### Applied transforms
 - Apply rotation and scale before any boolean, bevel or export. Bevel widths, solidify thickness and boolean results all go wrong on scaled objects.
@@ -57,5 +58,3 @@ Parts of a big model keep their own pivots at their real mounting faces, so each
 ### Scripted, repeatable builds
 Build models from a script so every fix is an edit and a re-run that takes seconds. Keep the facts the build depends on in the script's docstring (anchor dimension, facing, pivots, any positions the game code relies on). Never leave scratch code (`if False else ...`) in a model script; re-read a block before running it.
 
-### Credits
-The pivot conventions are adapted (MIT) from arjun988/blender-skills, "hard-surface" and "prop-artist": https://github.com/arjun988/blender-skills

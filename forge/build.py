@@ -69,8 +69,6 @@ def build(ws, name=None, author=None, generic=False, exclude=(), include_example
         shutil.copy2(os.path.join(paths.TEMPLATES, f), os.path.join(out, "scripts", f))
     shutil.copy2(os.path.join(paths.BLENDER, "analyse_blend.py"), os.path.join(out, "scripts", "analyse_blend.py"))
     shutil.copy2(os.path.join(paths.LIB, "doclib.py"), os.path.join(out, "scripts", "doclib.py"))
-    if os.path.isfile(os.path.join(paths.REPO, "THIRD_PARTY.md")):
-        shutil.copy2(os.path.join(paths.REPO, "THIRD_PARTY.md"), os.path.join(out, "THIRD_PARTY.md"))
     module_scripts = {}
     for m in mods:
         chk = os.path.join(m["dir"], "check.py")

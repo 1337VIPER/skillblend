@@ -1,23 +1,27 @@
 ## Bevels and Shading
 
 - Nothing knife-sharp that a hand would touch. Every hard edge gets a bevel sized by its tier.
-- Bevel tiers by edge: primary edges 5-20 mm with 3+ segments, panel edges 1-3 mm, micro edges 0.5-1 mm.
+- Size bevels from a small set of widths, chosen by what the edge is (see the measured ladder below), never a fresh width per edge.
 - On an invented or live-stack prop, use only three bevel widths for the whole model, taken as ratios of the main body size D: fine 0.36% of D, mid 0.82%, cutter chamfer 1.1% (about 1 : 2.25 : 3). One ladder everywhere is why parts look like they belong together.
 - Bevel modifier defaults: limit method Angle at 30 degrees, 3 segments, profile 0.7 (a touch squarer than round), clamp overlap off (and keep every width under half the thinnest wall).
 - Bevel BEFORE booleans: a bevel after a boolean clamps to the smallest gap and makes non-manifold corners where a cut leaves a hole inside a face.
-- Shading: smooth shading with edges over 30 degrees marked sharp, then a Weighted Normal modifier LAST, with Keep Sharp on.
-- Auto smooth does nothing in headless Blender: mark sharp edges in bmesh (or with a Smooth by Angle node) instead of relying on it.
+- Shading in a script: `mesh.shade_smooth()` then `mesh.set_sharp_from_angle(angle)` writes smoothing straight into the mesh, so it survives export and every Blender version. Put the Weighted Normal modifier after the bevel (tested: flat faces bend 8.5 deg instead of 29 deg).
 - SubD parts are the exception: no sharp edges and no bevel modifier on them; crispness comes from holding loops (see subd-topology).
 - Metals reflect a dark scene and render near-black: judge shading under the scene's real lighting, not only in a bright preview.
 
 <!-- more -->
 
-### Bevel tiers (real sizes)
-| Tier | Width | Segments | Where |
+### The width ladder (measured)
+SkillBlend measured 649 live Bevel modifiers across a 23-asset hard-surface portfolio (props, weapons and vehicles). The widths are continuous, but they cluster into three groups, plus a few large chamfers:
+
+| Group | Typical width | Share | What it was used on |
 |---|---|---|---|
-| Primary | 5-20 mm | 3+ | the big outer edges of the body, anything a hand holds |
-| Panel | 1-3 mm | 2-3 | panel edges, covers, plates, lids |
-| Micro | 0.5-1 mm | 1-2 | small parts, lips, edges that only need to catch a highlight |
+| Fine | about 0.3 mm | 23% | screws, lips, printed plates, tiny parts that only need a highlight |
+| Mid | about 0.5 mm | 51% | most parts: covers, brackets, housings, rails |
+| Heavy | about 2 mm | 26% | the outer edges of bodies and anything held |
+| Chamfer | 5-35 mm | rare | one or two big design chamfers on the main body |
+
+The common settings were 3 segments, an angle limit around 30-40 degrees and Clamp Overlap on. When your own files are learned, your measured ladder replaces this one.
 
 Process sets the edge too (see blockout-to-detail): machined aluminium gets a crisp 0.3-1 mm chamfer that catches light; moulded plastic gets 0.5-2 mm fillets, never razor-sharp; cast parts get soft 1-3 mm fillets; sheet metal has square cut edges with a tiny break and a bend radius about equal to its thickness; ground steel has sharp grind transitions and a narrow bright edge bevel.
 
@@ -48,16 +52,18 @@ All with profile 0.7, 3 segments and an angle limit of 30 degrees. `tiers(D)` in
 - A cut that leaves a hole inside a face (a groove or channel that stops short of an edge) makes Blender bridge the hole with an edge to a corner. A bevel modifier run after the cut breaks at that 4-edge corner and gives non-manifold edges (90 bad edges on 5 parts of one pistol). Fixes: bevel first, or run the groove out through an edge; tidy after every boolean (see booleans-and-cutters); keep a cutter's bevelled edges clear of the faces they meet.
 - The cutter's own bevel is the chamfer the opening gets. Give cutters a wider bevel than the body (the "cutter" tier).
 
-### Shading: sharp edges and weighted normals
-1. Shade smooth.
-2. Mark edges over the sharp angle (30 degrees) as sharp. Do it in bmesh:
-   ```python
-   for e in bm.edges:
-       e.smooth = not (e.is_manifold and e.calc_face_angle(0.0) > math.radians(30))
-   ```
-   Auto smooth is a no-op in headless Blender, so never rely on it in a script. A Smooth by Angle geometry-nodes modifier works in the UI, but headless `--factory-startup` has no Essentials asset library, so a script must fall back to marking sharp edges on the base mesh (`stackkit.smooth()` does this).
-3. Add a Weighted Normal modifier LAST in the stack (after every bevel and boolean) with Keep Sharp on. It makes large flat faces shade flat right up to the bevel, which is what makes a 3-segment bevel read like a real fillet.
-4. At export, re-mark sharps and re-apply weighted normals after modifiers are applied and parts joined (see game-ready-export).
+### Shading: what we tested (Blender 5.2, headless, factory settings)
+| Approach | Result |
+|---|---|
+| `mesh.shade_smooth()` + `mesh.set_sharp_from_angle(angle=30 deg)` | smooth faces, sharp edges written into the mesh (12 on a cube). Nothing to apply, nothing lost on export. **Use this in scripts.** |
+| `bpy.ops.object.shade_auto_smooth(angle=30 deg)` | works headless in 5.2: it adds a "Smooth by Angle" geometry-nodes modifier. That modifier has to be applied before export, and older Blender versions behave differently, so prefer the mesh route. |
+| Weighted Normal **after** the Bevel (Keep Sharp on) | the corner normals of big flat faces bend at most 8.5 deg: panels stay flat right up to the bevel. |
+| Weighted Normal **before** the Bevel | the same faces bend up to 28.9 deg: the "putty" gradient across flat panels. |
+
+So:
+1. Shade smooth and mark sharp edges by angle on the mesh data (`stackkit.smooth()` does the bmesh version).
+2. Put the Weighted Normal modifier after every Bevel and Boolean, with Keep Sharp on. That is what makes a 3-segment bevel read like a real fillet.
+3. After applying modifiers and joining for export, mark sharps and add the weighted normals again (see game-ready-export).
 
 Harden Normals on the bevel modifier is not needed when a Weighted Normal modifier runs last.
 
@@ -70,7 +76,3 @@ A hard (sharp) edge must also be a UV split, or the bake draws a line along it. 
 - **Judge in the scene's light.** Dark print on dark plastic and white print on a white surface are the usual failures, and only show under the game's own lighting.
 - **Old pressed steel and car bodies** have no knife edges at all; their roll radii are in the vehicles module.
 
-### Credits
-Adapted (MIT) from two published skills:
-- arjun988/blender-skills, "hard-surface" and "prop-artist" (bevel tiers, wear via roughness): https://github.com/arjun988/blender-skills
-- garyhtou/claude-plugins, "building-3d-for-web" (weighted normals last, auto smooth is a no-op headless): https://github.com/garyhtou/claude-plugins/blob/HEAD/plugins/high-fidelity-web/skills/building-3d-for-web/SKILL.md

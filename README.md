@@ -14,6 +14,7 @@ SkillBlend is a local app for Blender artists who use [Claude Code](https://clau
 
 - **Nothing to fill in.** You don't answer an interview or tag files. SkillBlend sorts your files by technique itself.
 - **Measured, not guessed.** Every rule in the skill comes from your files, with the numbers and how many files they came from.
+- **Original work.** The built-in workflow was written for SkillBlend from its authors' own models, measurements and Blender tests.
 - **Gaps are covered.** Any technique your project doesn't show uses a complete, tested built-in workflow.
 - **Local and read-only.** Blender opens your files in the background and never saves them. Nothing is uploaded.
 
@@ -184,7 +185,6 @@ Other commands:
 - **The app is local-only.** It listens on `127.0.0.1` only, and every request must carry a token written into the page, so other websites can't drive it.
 - **Built skills include your files only if you ask** ("Include my .blend files as examples"). Turn this off before sharing a skill. With examples on, your build scripts are copied too, and they may contain local paths.
 - **Kits:** kit files are copied into the skill only if you confirm they're yours to ship. Bought kits are catalogued (names and sizes) but never copied.
-- The built-in workflow includes MIT-licensed material from [arjun988/blender-skills](https://github.com/arjun988/blender-skills) and [garyhtou/claude-plugins](https://github.com/garyhtou/claude-plugins). See [THIRD_PARTY.md](THIRD_PARTY.md); every built skill carries a copy.
 
 ## Extending SkillBlend
 
