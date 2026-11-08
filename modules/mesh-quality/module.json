@@ -1,0 +1,25 @@
+{
+  "id": "mesh-quality",
+  "order": 4,
+  "title": "Mesh quality",
+  "optional": false,
+  "summary": "How clean your meshes are: face shapes (stretched, skewed or bent quads), triangles and n-gons, poles, non-manifold edges, and how crisp or soft your forms are.",
+  "request": {
+    "brief": "Submit a finished model whose topology you're happy with, as you'd hand it over.",
+    "must_include": [
+      "Your finished, clean topology"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "a hard-surface prop",
+      "a SubD part",
+      "a vehicle panel"
+    ]
+  },
+  "questions": [
+    {
+      "key": "quality_notes",
+      "ask": "Where do you accept triangles or n-gons (flat caps, hidden faces, never)?"
+    }
+  ]
+}

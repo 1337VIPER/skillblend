@@ -26,10 +26,31 @@ def rules(ctx):
     sr = [o["mesh"].get("support_ratio") for o in cages if o["mesh"].get("support_ratio")]
     if sr:
         r.number("subd_support_ratio", round(L.median(sr), 3), "10th-percentile edge / median edge")
-        r.rule(f"Support loops sit tight: the shortest tenth of edges are about {L.fmt(L.median(sr) * 100)}% "
-               "of the typical edge length. Holding loops go that close to the edge they hold.")
-    r.headline(f"Curved hard-surface parts are SubD cages (level {lv}/{rl}), about {L.percent(L.median(qr)) if qr else 'mostly'} quads, "
-               "held with tight support loops.")
+        tight = L.median(sr) < 0.4
+        r.rule(f"The shortest tenth of cage edges are about {L.fmt(L.median(sr) * 100)}% of the typical edge length"
+               + (": tight support loops." if tight else ": no tight support loops, edges are held another way (see creases)."))
+    hq = [(o["mesh"].get("quality") or {}) for o in cages]
+    hd = [q["hold_distance_median"] for q in hq if q.get("hold_distance_median")]
+    hr = [q["hold_ratio_median"] for q in hq if q.get("hold_ratio_median")]
+    if hd:
+        r.number("subd_hold_mm", round(L.median(hd) * 1000, 2), "distance from each held edge to its nearest loop")
+        r.number("subd_hold_ratio", round(L.median(hr), 3) if hr else None, "holding distance / typical edge length")
+        r.rule(f"Holding loops sit about {L.fmt(L.median(hd) * 1000)} mm from the edges they hold "
+               f"(measured at {sum(q.get('held_edges', 0) for q in hq)} held edges"
+               + (f"; about {L.percent(L.median(hr))} of a typical edge length" if hr else "") + ").")
+    pin = [o["mesh"].get("pinch") or {} for o in cages]
+    pin = [p for p in pin if p.get("poles") is not None and "error" not in p]
+    if pin:
+        poles = sum(p["poles"] for p in pin)
+        bad = sum(round(p.get("pinched_poles", 0) * p["poles"]) for p in pin)
+        r.number("subd_pinched_max", round(L.pct([p.get("pinched_poles", 0) for p in pin], 0.9), 3),
+                 "share of pinched poles per cage, 90th percentile")
+        r.rule(f"Pinching: {bad} of {poles} poles shade with a kink after subdivision (a pole bending much more than "
+               "its neighbours); " + ("cages are essentially pinch-free." if poles and bad / poles < 0.05 else
+                                      "watch pole placement on curved areas."))
+    skews = [q.get("quad_skew_p90") for q in hq if q.get("quad_skew_p90") is not None]
+    if skews:
+        r.rule(f"Cage quads stay within about {L.fmt(L.median(skews))} deg of square (90th percentile per cage).")
     creased = [o for o in cages if o["mesh"].get("crease_edges")]
     if creased:
         r.rule(f"Edge creases on {len(creased)} cage(s), median crease {L.fmt(L.median(o['mesh'].get('crease_median') for o in creased))}.")
@@ -42,6 +63,15 @@ def rules(ctx):
     sol = L.share(order, lambda s: "SOLIDIFY" in s)
     if sol:
         r.rule(f"Shells: Solidify before subdivision on {L.percent(sol)} of cages (thin shells modelled as a single surface).")
+    crease_share = len(creased) / len(cages)
+    hold_ratio = r.numbers.get("subd_hold_ratio")
+    how = ("edge creases" if crease_share >= 0.5 else
+           "tight support loops" if hold_ratio is not None and hold_ratio < 0.4 else
+           "bevel-before-subdivision" if pre and pre >= 0.5 else "soft, evenly spaced loops")
+    r.number("subd_hold_method", how)
+    r.headline(f"Curved parts are SubD cages (level {lv}/{rl}), about {L.percent(L.median(qr)) if qr else 'mostly'} quads, "
+               f"edges held with {how}"
+               + (", and pinch-free" if r.numbers.get("subd_pinched_max") is not None and r.numbers["subd_pinched_max"] < 0.05 else "") + ".")
     for k, label in (("support_method", "Edge holding (artist)"), ("triangles_ok", "Triangles/n-gons (artist)")):
         if ctx.answers.get(k):
             r.rule(f"{label}: {ctx.answers[k]}.")

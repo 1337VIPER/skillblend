@@ -177,8 +177,9 @@ The details are in **[docs/how-it-works.md](docs/how-it-works.md)**.
 | Setup, scale and naming | are source files (not merged exports) | units, real sizes, applied scale, origins, naming case and prefixes, collections |
 | Structure and assemblies | have 5 or more parts | parts per asset, the smallest detail, detail density by part size, round-part segment counts, assembly collections and asset codes, parenting, pivot/socket empties |
 | Blockout to detail | have a `Blockout` collection | part and triangle growth from blockout to final, how far the size drifts, reference setup |
-| Bevels and shading | have live bevels or bevel weights | bevel tiers, segments, limit method, profile, harden normals, clamp, weighted normals, smoothing |
-| SubD topology | have live Subdivision Surface | levels, creases, quad share, support-loop tightness, poles |
+| Bevels and shading | have live bevels or bevel weights | bevel tiers (natural breaks in your widths), segments, limit method, profile, harden normals, clamp, weighted normals, smoothing |
+| SubD topology | have live Subdivision Surface | levels, creases, quad share, how far holding loops sit from the edges they hold (measured at each held edge), poles, and **pinching**: poles that kink the shading after subdivision, compared with their own neighbours so crisp corners don't count |
+| Mesh quality | are source (not export) files | your tolerances: how stretched, skewed or bent faces get, triangles and n-gons, vertex valence, non-manifold edges and zero-area faces, and the edge profile (how much of a mesh is flat, soft or sharp) |
 | Booleans and cutters | have live Boolean modifiers | solver, operand type, cutter display, naming, collection, parenting, position in the stack |
 | Modifier stacks | have live modifier stacks | the project-wide stack order, and a **modifier dictionary**: every modifier type in your files (Shrinkwrap, Edge Split, Solidify, anything), how often you use it, and every setting you change from Blender's defaults |
 | Geometry Nodes | use Geometry Nodes modifiers | your node groups, what they're for (cables from curves, instancing, scattering, procedural meshes), the nodes inside and the input values you set |

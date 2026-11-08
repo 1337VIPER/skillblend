@@ -15,7 +15,7 @@ import sys
 import os
 from collections import Counter
 
-VERSION = 3
+VERSION = 4
 
 
 def _r(x, n=6):
@@ -229,6 +229,158 @@ def uv_stats(bm, mesh):
     return out
 
 
+# ---------------------------------------------------------------- mesh quality (face shape, edge angles, holding loops)
+QUALITY_CAP = 40000  # faces / edges sampled per object (evenly spread) so huge meshes stay fast
+
+
+def mesh_quality(bm):
+    """Face shape, edge-angle profile, true support-loop distances and vertex valence, on the base mesh."""
+    q = {}
+    faces = bm.faces
+    nf = len(faces)
+    if not nf:
+        return q
+    step = max(1, nf // QUALITY_CAP)
+    aspect, skew, tri_min = [], [], []
+    nonplanar = quads = zero = 0
+    for i in range(0, nf, step):
+        f = faces[i]
+        vs = [v.co for v in f.verts]
+        k = len(vs)
+        lens = [(vs[j] - vs[(j + 1) % k]).length for j in range(k)]
+        if f.calc_area() < 1e-12:
+            zero += 1
+            continue
+        if min(lens) > 1e-9:
+            aspect.append(max(lens) / min(lens))
+        if k == 4:
+            quads += 1
+            worst = 0.0
+            for j in range(4):
+                a, b = vs[j - 1] - vs[j], vs[(j + 1) % 4] - vs[j]
+                if a.length > 1e-9 and b.length > 1e-9:
+                    worst = max(worst, abs(math.degrees(a.angle(b)) - 90.0))
+            skew.append(worst)
+            nrm = (vs[1] - vs[0]).cross(vs[2] - vs[0])
+            if nrm.length > 1e-12 and abs((vs[3] - vs[0]).dot(nrm.normalized())) > 0.05 * (sum(lens) / 4):
+                nonplanar += 1
+        elif k == 3:
+            angs = []
+            for j in range(3):
+                a, b = vs[j - 1] - vs[j], vs[(j + 1) % 3] - vs[j]
+                if a.length > 1e-9 and b.length > 1e-9:
+                    angs.append(math.degrees(a.angle(b)))
+            if angs:
+                tri_min.append(min(angs))
+    sampled = len(range(0, nf, step))
+    q["sampled_faces"] = sampled
+    if aspect:
+        q["aspect_median"] = _r(_pct(aspect, 0.5), 3)
+        q["aspect_p90"] = _r(_pct(aspect, 0.9), 3)
+    if skew:
+        q["quad_skew_median"] = _r(_pct(skew, 0.5), 2)
+        q["quad_skew_p90"] = _r(_pct(skew, 0.9), 2)
+        q["skewed_quads"] = _r(sum(1 for s in skew if s > 30) / len(skew), 4)
+    if quads:
+        q["nonplanar_quads"] = _r(nonplanar / quads, 4)
+    if tri_min:
+        q["tri_min_angle_p10"] = _r(_pct(tri_min, 0.1), 2)
+    q["zero_area_faces"] = zero
+    # edge angles: how crisp or soft the form is, and how far holding loops sit from the edges they hold
+    edges = bm.edges
+    ne = len(edges)
+    estep = max(1, ne // QUALITY_CAP)
+    bands = Counter()
+    hold, hold_ratio = [], []
+    lens_all = [edges[i].calc_length() for i in range(0, ne, estep)]
+    med = _pct(lens_all, 0.5) or 0.0
+    for i in range(0, ne, estep):
+        e = edges[i]
+        if len(e.link_faces) != 2:
+            continue
+        ang = math.degrees(e.calc_face_angle(0.0))
+        bands["flat" if ang < 1 else "smooth" if ang < 10 else "soft" if ang < 30 else "hard" if ang < 60 else "sharp"] += 1
+        if ang >= 30:
+            a, b = e.verts[0].co, e.verts[1].co
+            mid = (a + b) / 2
+            sides = []
+            for f in e.link_faces:  # the nearer of the two neighbouring quads is the holding loop
+                if len(f.verts) != 4:
+                    continue
+                opp = [x for x in f.edges if not (set(x.verts) & set(e.verts))]
+                if opp:
+                    om = (opp[0].verts[0].co + opp[0].verts[1].co) / 2
+                    sides.append((om - mid).length)
+            if sides:
+                d = min(sides)
+                hold.append(d)
+                if med > 0:
+                    hold_ratio.append(d / med)
+    tot = sum(bands.values())
+    if tot:
+        q["edge_angles"] = {k: _r(v / tot, 4) for k, v in bands.items()}
+    if hold:
+        q["hold_distance_median"] = _r(_pct(hold, 0.5), 6)
+        q["hold_distance_p10"] = _r(_pct(hold, 0.1), 6)
+        q["hold_ratio_median"] = _r(_pct(hold_ratio, 0.5), 4) if hold_ratio else None
+        q["held_edges"] = len(hold)
+    # valence of interior vertices
+    val = Counter()
+    vs = bm.verts
+    vstep = max(1, len(vs) // QUALITY_CAP)
+    for i in range(0, len(vs), vstep):
+        v = vs[i]
+        if any(e.is_boundary for e in v.link_edges) or not v.link_faces:
+            continue
+        n = len(v.link_edges)
+        val["3" if n == 3 else "4" if n == 4 else "5" if n == 5 else "6+" if n >= 6 else "2-"] += 1
+    tv = sum(val.values())
+    if tv:
+        q["valence"] = {k: _r(v / tv, 4) for k, v in val.items()}
+    return q
+
+
+def pinch_stats(mesh, max_verts=300000):
+    """On a subdivided result: does shading kink at poles? Each pole's normal deviation is compared with its own
+    neighbours, so crisp corners (where every vertex bends) aren't mistaken for pinching."""
+    if len(mesh.vertices) > max_verts:
+        return {"skipped": "too dense"}
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bm.normal_update()
+    dev = {}
+    for v in bm.verts:
+        if any(e.is_boundary for e in v.link_edges) or len(v.link_faces) < 3:
+            continue
+        n = v.normal
+        dev[v.index] = max((math.degrees(n.angle(f.normal)) for f in v.link_faces if f.normal.length > 0), default=0.0)
+    regular, ratios, pinched, poles = [], [], 0, 0
+    for v in bm.verts:
+        d = dev.get(v.index)
+        if d is None:
+            continue
+        if len(v.link_edges) == 4:
+            regular.append(d)
+            continue
+        poles += 1
+        ring = [dev[e.other_vert(v).index] for e in v.link_edges if e.other_vert(v).index in dev]
+        local = _pct(ring, 0.5) if ring else None
+        if local and local > 1e-6:
+            ratios.append(d / local)
+            if d > 2.5 * local and d > 5.0:
+                pinched += 1
+    bm.free()
+    out = {"poles": poles}
+    if regular:
+        out["regular_dev_median"] = _r(_pct(regular, 0.5), 3)
+    if ratios:
+        out["pinch_ratio"] = _r(_pct(ratios, 0.5), 3)
+        out["pinch_ratio_p90"] = _r(_pct(ratios, 0.9), 3)
+    if poles:
+        out["pinched_poles"] = _r(pinched / poles, 4)
+    return out
+
+
 def mesh_stats(obj, depsgraph):
     me = obj.data
     st = {"verts": len(me.vertices), "edges": len(me.edges), "faces": len(me.polygons)}
@@ -285,6 +437,10 @@ def mesh_stats(obj, depsgraph):
         st["edge_len_p10"] = _r(_pct(lens, 0.10))
         st["support_ratio"] = _r(_pct(lens, 0.10) / med, 4) if med > 0 else None
     st["uv"] = uv_stats(bm, me)
+    try:
+        st["quality"] = mesh_quality(bm)
+    except Exception as exc:  # pragma: no cover
+        st["quality"] = {"error": str(exc)}
     bm.free()
 
     # after modifiers
@@ -292,6 +448,11 @@ def mesh_stats(obj, depsgraph):
         ev = obj.evaluated_get(depsgraph)
         em = ev.to_mesh()
         st["eval_tri_count"] = sum(len(p.vertices) - 2 for p in em.polygons)
+        if any(m.type == "SUBSURF" and m.show_viewport for m in obj.modifiers):
+            try:
+                st["pinch"] = pinch_stats(em)
+            except Exception as exc:  # pragma: no cover
+                st["pinch"] = {"error": str(exc)}
         st["eval_verts"] = len(em.vertices)
         ev.to_mesh_clear()
     except Exception as exc:  # pragma: no cover

@@ -1,0 +1,7 @@
+{
+  "quality_aspect_p90": 6.0,
+  "quality_skew_p90": 25.0,
+  "nonplanar_max": 0.05,
+  "non_manifold_ok": false,
+  "_notes": "Standard tolerances (assumed): faces up to about 6:1, quads skewed up to about 25 degrees, almost no bent quads, no non-manifold edges."
+}

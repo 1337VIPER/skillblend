@@ -136,6 +136,8 @@ def main():
     check(rec.get("metallic") == 1.0 and "Roughness" in (rec.get("procedural") or {}), "shader recipe measured (SteelDark)")
     check(n2.get("view_transform") == "AgX" and n2.get("world_kind") == "sky", "look-dev measured (AgX, sky world)")
     check(n2.get("gn_groups") == ["CableFromCurve"], "Geometry Nodes group measured")
+    check(n2.get("quality_aspect_p90") and n2.get("quality_skew_p90") is not None and "edge_profile" in n2, "mesh quality measured")
+    check(n2.get("subd_hold_mm") and n2.get("subd_pinched_max") is not None, "SubD holding loops and pinching measured")
     refs = os.listdir(os.path.join(res2["dir"], "references")) if res2.get("dir") else []
     check("modifier-dictionary.md" in refs and "shader-recipes.md" in refs, "reference tables written into the skill")
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 (2026-11-08)
+
+Mesh quality: SkillBlend now measures how clean your topology is and how your SubD holds and shades.
+
+- **Mesh quality** (new): face stretch, quad skew, bent quads, triangles and n-gons, vertex valence, non-manifold edges, zero-area faces, and the edge profile (how much of a mesh is flat, soft or sharp). Your skill learns your tolerances, and `style_check.py` flags models that go well past them.
+- **Holding loops measured directly:** the distance from every held edge in a SubD cage to its nearer loop, in millimetres.
+- **Pinch detection:** on the subdivided result, poles whose shading kinks compared with their own neighbours (crisp corners aren't counted). `style_check.py` warns about pinched cages.
+- **Better bevel tiers:** natural breaks (Fisher-Jenks) on your widths, with the number of tiers chosen from your data instead of a fixed three.
+
 ## 0.2.0 (2026-11-08)
 
 Deeper analysis: SkillBlend now researches every modifier, every node tree and how you shade and light.

@@ -2,28 +2,83 @@
 from collections import Counter
 
 
-def bevel_tiers(widths, k=3, min_share=0.05):
-    """Fine / mid / heavy tiers: 1D k-means on log width (widths are continuous, so gaps alone don't split them)."""
+def _jenks(values, weights, k):
+    """Optimal 1D grouping into k classes (Fisher-Jenks natural breaks) on weighted, sorted values."""
+    n = len(values)
+    INF = float("inf")
+    # prefix sums for weighted within-class variance
+    pw, px, pxx = [0.0], [0.0], [0.0]
+    for v, w in zip(values, weights):
+        pw.append(pw[-1] + w)
+        px.append(px[-1] + w * v)
+        pxx.append(pxx[-1] + w * v * v)
+
+    def cost(i, j):  # values[i..j] inclusive
+        w = pw[j + 1] - pw[i]
+        s = px[j + 1] - px[i]
+        return (pxx[j + 1] - pxx[i]) - s * s / w if w else 0.0
+
+    dp = [[INF] * n for _ in range(k)]
+    cut = [[0] * n for _ in range(k)]
+    for j in range(n):
+        dp[0][j] = cost(0, j)
+    for c in range(1, k):
+        for j in range(c, n):
+            best, arg = INF, c
+            for i in range(c, j + 1):
+                v = dp[c - 1][i - 1] + cost(i, j)
+                if v < best:
+                    best, arg = v, i
+            dp[c][j], cut[c][j] = best, arg
+    bounds, j = [], n - 1
+    for c in range(k - 1, 0, -1):
+        i = cut[c][j]
+        bounds.append(i)
+        j = i - 1
+    bounds = sorted(bounds)
+    groups, start = [], 0
+    for bnd in bounds + [n]:
+        groups.append((start, bnd - 1))
+        start = bnd
+    return dp[k - 1][n - 1], groups
+
+
+def bevel_tiers(widths, max_k=5, gvf_target=0.9, min_share=0.03):
+    """Tiers of bevel width by natural breaks on log width: the fewest tiers that explain 90% of the variance."""
     import math
-    ws = sorted(w for w in widths if w and w > 0)
-    if len(ws) < 6 or ws[int(len(ws) * 0.9)] < 2.5 * ws[int(len(ws) * 0.1)]:
-        return [(ws[len(ws) // 2], 1.0)] if ws else []
-    xs = [math.log(w) for w in ws]
-    cs = [xs[int((i + 0.5) / k * (len(xs) - 1))] for i in range(k)]
-    for _ in range(30):
-        groups = [[] for _ in cs]
-        for x in xs:
-            groups[min(range(len(cs)), key=lambda i: abs(x - cs[i]))].append(x)
-        new = [sum(g) / len(g) if g else c for g, c in zip(groups, cs)]
-        if new == cs:
+    from collections import Counter as _C
+    ws = [w for w in widths if w and w > 0]
+    if not ws:
+        return []
+    c = _C(round(math.log(w), 4) for w in ws)
+    vals = sorted(c)
+    wts = [c[v] for v in vals]
+    if len(vals) < 3:
+        return [(math.exp(v), c[v] / len(ws)) for v in vals]
+    total = sum(wts)
+    mean = sum(v * w for v, w in zip(vals, wts)) / total
+    sdam = sum(w * (v - mean) ** 2 for v, w in zip(vals, wts))
+    if sdam < 1e-9:
+        return [(math.exp(vals[0]), 1.0)]
+    groups = [(0, len(vals) - 1)]
+    for k in range(2, min(max_k, len(vals)) + 1):
+        sdcm, groups = _jenks(vals, wts, k)
+        if 1 - sdcm / sdam >= gvf_target:
             break
-        cs = new
     out = []
-    for g in groups:
-        if len(g) / len(xs) >= min_share:
-            g = sorted(g)
-            out.append((math.exp(g[len(g) // 2]), len(g) / len(xs)))
-    return sorted(out)
+    for i, j in groups:
+        gw = sum(wts[i:j + 1])
+        if gw / total < min_share:
+            continue
+        # weighted median of the group
+        acc, med = 0, vals[i]
+        for v, w in zip(vals[i:j + 1], wts[i:j + 1]):
+            acc += w
+            if acc >= gw / 2:
+                med = v
+                break
+        out.append((math.exp(med), gw / total))
+    return out
 
 
 def wn_any(parts, L):
@@ -67,8 +122,8 @@ def rules(ctx):
                    "Scale bevels with the part, don't reuse one absolute width on everything.")
         tiers = bevel_tiers(widths)
         if len(tiers) > 1:
-            r.number("bevel_tiers_m", [round(t, 5) for t, _ in tiers], "clusters of bevel widths")
-            r.rule("Bevel tiers (clusters of widths, share of bevels): "
+            r.number("bevel_tiers_m", [round(t, 5) for t, _ in tiers], "natural breaks in bevel width")
+            r.rule("Bevel tiers (natural breaks in your widths, share of bevels): "
                    + ", ".join(f"{L.mm(t)} ({L.percent(s)})" for t, s in tiers)
                    + ". Pick the tier by the edge's role, not a new width each time.")
         r.headline(f"Hard edges get a live Bevel ({L.mode(segs)} segments, {lim.lower()} limit"

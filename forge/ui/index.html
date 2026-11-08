@@ -268,7 +268,11 @@ const FACTS = {
   "bevels-and-shading": [["bevel_tiers_m","Bevel sizes", v => v.map(mmv).join(" · ")], ["bevel_width_m","Typical bevel", mmv],
                       ["bevel_segments","Bevel segments", v => v], ["bevel_angle_deg","Bevel angle limit", v => v + "°"], ["weighted_normal","Weighted Normal", yes]],
   "subd-topology": [["subd_levels_viewport","SubD level", (v, n) => v + " (render " + (n.subd_levels_render ?? v) + ")"], ["subd_quad_ratio_min","Quads in cages", v => "≥ " + pct(v)],
+                      ["subd_hold_method","Edges held with", v => v], ["subd_hold_ratio","Holding loops", v => pct(v) + " of an edge length from the edge"], ["subd_pinched_max","Pinched poles", v => v < 0.05 ? "None to speak of" : "Up to " + pct(v)],
                       ["subd_use_creases","Creases", yes]],
+  "mesh-quality": [["quality_aspect_p90","Face stretch", v => "under " + (+v).toFixed(1) + " : 1"], ["quality_skew_p90","Quad skew", v => "within " + Math.round(v) + "°"],
+                      ["nonplanar_max","Bent quads", v => v < 0.01 ? "Almost none" : "up to " + pct(v)], ["non_manifold_ok","Non-manifold edges", v => v ? "Sometimes" : "Never"],
+                      ["edge_profile","Edge profile", v => Object.entries(v).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, x]) => k + " " + pct(x)).join(", ")]],
   "booleans-and-cutters": [["boolean_solver","Boolean solver", nice], ["cutter_display","Cutters shown as", nice], ["cutter_collection","Cutter collection", v => v], ["boolean_keep_live","Kept live", yes]],
   "modifier-stacks": [["stack_order","Modifier order", v => v.map(nice).join(" → ")],
                       ["modifier_defaults","Modifier types used", v => Object.keys(v).length + ": " + Object.keys(v).slice(0,5).map(nice).join(", ")]],
@@ -304,6 +308,7 @@ const ICONS = {
   "shaders-and-nodes": '<circle cx="12" cy="12" r="9"/><path d="M8.5 8.5a5 5 0 0 1 5-2"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 3" opacity=".4"/>',
   "geometry-nodes": '<rect x="2" y="4" width="7" height="6" rx="1.5"/><rect x="15" y="14" width="7" height="6" rx="1.5"/><rect x="15" y="4" width="7" height="6" rx="1.5"/><path d="M9 7h6M9 7c3 0 3 10 6 10"/>',
   "lookdev-and-render": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  "mesh-quality": '<path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/><circle cx="15" cy="9" r="2.2" fill="currentColor"/>',
   "vehicles": '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 17V12l3-5h9l4 5h2v5"/>',
 };
 const icon = id => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[id] || ICONS["structure-and-assemblies"]}</svg>`;
