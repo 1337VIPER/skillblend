@@ -1,0 +1,27 @@
+{
+  "id": "shaders-and-nodes",
+  "order": 7,
+  "title": "Shaders and node setups",
+  "optional": false,
+  "summary": "How you build materials in the node editor: which shader you start from, procedural or image textures, the node chains you reuse (noise into roughness, normal maps, shader bevels) and your PBR values per material.",
+  "request": {
+    "brief": "Submit a finished asset with its materials built the way you shade for review: the full node setups, not just flat colours.",
+    "must_include": [
+      "Materials with their node trees",
+      "Your usual procedural or image texture setups",
+      "Any shader node groups you reuse"
+    ],
+    "submit": "One or two .blend files.",
+    "ideas": [
+      "a prop with painted metal, rubber and glass",
+      "a weathered machine",
+      "a vehicle"
+    ]
+  },
+  "questions": [
+    {
+      "key": "shading_notes",
+      "ask": "Anything about how you shade that the node trees don't show (for example: final textures come from Substance)?"
+    }
+  ]
+}

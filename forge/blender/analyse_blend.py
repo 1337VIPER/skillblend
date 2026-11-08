@@ -15,7 +15,7 @@ import sys
 import os
 from collections import Counter
 
-VERSION = 2
+VERSION = 3
 
 
 def _r(x, n=6):
@@ -112,6 +112,12 @@ def modifier_info(m):
                     pass
     if m.type == "EDGE_SPLIT":
         d["split_angle_deg"] = _r(math.degrees(m.split_angle), 3)
+    if m.type == "NODES":
+        d["inputs"] = gn_inputs(m)
+    try:
+        d["settings"] = rna_settings(m)
+    except Exception:
+        pass
     return d
 
 
@@ -347,7 +353,15 @@ def object_info(obj, depsgraph):
         "materials": [s.material.name if s.material else None for s in obj.material_slots],
         "modifiers": [modifier_info(m) for m in obj.modifiers],
         "custom_props": sorted(k for k in obj.keys() if not k.startswith("_")),
+        "constraints": [c.type for c in obj.constraints],
+        "animated": bool(obj.animation_data and (obj.animation_data.action or obj.animation_data.drivers)),
+        "drivers": len(obj.animation_data.drivers) if obj.animation_data else 0,
     }
+    if obj.type == "MESH":
+        me = obj.data
+        d["color_attributes"] = [f"{a.name}:{a.domain}" for a in getattr(me, "color_attributes", [])]
+        d["shape_keys"] = len(me.shape_keys.key_blocks) if me.shape_keys else 0
+        d["particle_systems"] = [ps.settings.type for ps in obj.particle_systems]
     if obj.type in {"MESH", "CURVE", "FONT"}:
         try:
             d["origin_in_bbox"] = origin_in_bbox(obj)
@@ -355,6 +369,22 @@ def object_info(obj, depsgraph):
             pass
     if obj.type == "MESH":
         d["mesh"] = mesh_stats(obj, depsgraph)
+    elif obj.type == "LIGHT":
+        L = obj.data
+        d["light"] = {"type": L.type, "energy": _r(L.energy, 3), "color": _vec(L.color),
+                      "size": _r(getattr(L, "shadow_soft_size", 0), 4), "use_shadow": getattr(L, "use_shadow", None)}
+        if L.type == "SPOT":
+            d["light"]["spot_size_deg"] = _r(math.degrees(L.spot_size), 2)
+        if L.type == "AREA":
+            d["light"]["shape"] = L.shape
+            d["light"]["area_size"] = _r(L.size, 4)
+        if L.type == "SUN":
+            d["light"]["angle_deg"] = _r(math.degrees(L.angle), 3)
+    elif obj.type == "CAMERA":
+        c = obj.data
+        d["camera"] = {"type": c.type, "lens": _r(c.lens, 3), "sensor_width": _r(c.sensor_width, 3),
+                       "ortho_scale": _r(c.ortho_scale, 4), "dof": c.dof.use_dof,
+                       "clip": [_r(c.clip_start, 4), _r(c.clip_end, 2)]}
     elif obj.type == "EMPTY":
         d["empty"] = {"display": obj.empty_display_type, "size": _r(obj.empty_display_size),
                       "children": len(obj.children),
@@ -375,18 +405,305 @@ def collection_tree(col, depth=0):
             "children": [collection_tree(c, depth + 1) for c in col.children]}
 
 
-def material_info(mat):
-    d = {"name": mat.name, "users": mat.users, "use_nodes": mat.use_nodes}
-    if mat.use_nodes and mat.node_tree:
-        types = Counter(n.type for n in mat.node_tree.nodes)
-        d["nodes"] = dict(types)
-        d["images"] = sorted({n.image.name for n in mat.node_tree.nodes
-                              if n.type == "TEX_IMAGE" and n.image})
-        groups = sorted({n.node_tree.name for n in mat.node_tree.nodes
-                         if n.type == "GROUP" and n.node_tree})
-        if groups:
-            d["groups"] = groups
+# ---------------------------------------------------------------- full settings (any modifier, node, light...)
+SKIP_PROPS = {"rna_type", "name", "type", "show_viewport", "show_render", "show_in_editmode", "show_on_cage",
+              "show_expanded", "is_active", "is_override_data", "use_apply_on_spline", "persistent_uid",
+              "execution_time", "use_pin_to_last", "is_override_data_editable", "bl_idname", "bl_label",
+              "bl_description", "bl_icon", "bl_static_type", "bl_width_default", "bl_width_min", "bl_width_max",
+              "bl_height_default", "bl_height_min", "bl_height_max", "internal_links", "warning_propagation",
+              "color_tag", "debug_zone_body_lazy_function_graph", "debug_zone_lazy_function_graph"}
+# editor-only properties of nodes (where the node sits, how it's drawn), not how it shades
+NODE_SKIP = {"location", "location_absolute", "width", "height", "dimensions", "label", "parent", "select",
+             "show_options", "show_preview", "hide", "mute", "show_texture", "use_custom_color", "color"}
+
+
+def rna_settings(struct, skip=()):
+    """Every plain property of an RNA struct (enums, numbers, vectors, flags, and names of linked data)."""
+    out = {}
+    for p in struct.bl_rna.properties:
+        k = p.identifier
+        if k in SKIP_PROPS or k in skip or p.type == "COLLECTION" or k.startswith(("open_", "show_", "is_")) \
+                or k in ("bake_directory", "bake_target"):
+            continue
+        try:
+            v = getattr(struct, k)
+        except Exception:
+            continue
+        if p.type == "POINTER":
+            if v is None:
+                continue
+            nm = getattr(v, "name", None)
+            if isinstance(nm, str):
+                out[k] = nm
+            continue
+        jv = _jsonable(v)
+        if isinstance(jv, str) and len(jv) > 200:
+            continue
+        out[k] = jv
+    return out
+
+
+def _sock_value(s):
+    v = getattr(s, "default_value", None)
+    if v is None:
+        return None
+    if hasattr(v, "name") and isinstance(getattr(v, "name"), str):
+        return v.name
+    jv = _jsonable(v)
+    if isinstance(jv, list):
+        jv = jv[:4]
+    return jv
+
+
+# ---------------------------------------------------------------- node trees
+PBR_INPUTS = ("Base Color", "Metallic", "Roughness", "IOR", "Alpha", "Normal", "Specular IOR Level",
+              "Transmission Weight", "Coat Weight", "Coat Roughness", "Sheen Weight", "Subsurface Weight",
+              "Emission Color", "Emission Strength", "Anisotropic")
+
+
+def _upstream(sock, depth=0, max_depth=5):
+    """A short signature of what feeds a socket, e.g. 'TEX_NOISE>VALTORGB'."""
+    if not sock.is_linked or depth >= max_depth:
+        return []
+    link = sock.links[0]
+    n = link.from_node
+    name = n.type if n.type != "GROUP" else "GROUP:" + (n.node_tree.name if n.node_tree else "?")
+    if n.type == "REROUTE":
+        return _upstream(n.inputs[0], depth, max_depth)
+    best = []
+    for s in n.inputs:
+        if s.is_linked:
+            up = _upstream(s, depth + 1, max_depth)
+            if len(up) > len(best):
+                best = up
+    return best + [name]
+
+
+def node_info(n):
+    d = {"type": n.type}
+    if n.type == "GROUP":
+        d["group"] = n.node_tree.name if n.node_tree else None
+    if n.type == "TEX_IMAGE":
+        img = n.image
+        if img:
+            d["image"] = img.name
+            d["size"] = list(img.size)
+            d["colorspace"] = img.colorspace_settings.name
+            d["source"] = img.source
+        d["projection"] = n.projection
+        d["interpolation"] = n.interpolation
+        d["extension"] = n.extension
+    elif n.type == "TEX_ENVIRONMENT" and n.image:
+        d["image"] = n.image.name
+        d["size"] = list(n.image.size)
+    elif n.type == "VALTORGB":
+        cr = n.color_ramp
+        d["interpolation"] = cr.interpolation
+        d["stops"] = [[_r(e.position, 3), _vec(e.color)[:3]] for e in cr.elements][:8]
+    elif n.type in ("ATTRIBUTE",):
+        d["attribute"] = n.attribute_name
+    elif n.type == "VERTEX_COLOR":
+        d["layer"] = n.layer_name
+    elif n.type == "UVMAP":
+        d["uv_map"] = n.uv_map
+    else:
+        try:
+            st = rna_settings(n, skip=NODE_SKIP)
+            if st:
+                d["settings"] = st
+        except Exception:
+            pass
+    vals = {}
+    for s in n.inputs:
+        if not s.is_linked and s.enabled and not s.hide:
+            v = _sock_value(s)
+            if v is not None:
+                vals[s.name] = v
+    if vals and n.type not in ("OUTPUT_MATERIAL", "OUTPUT_WORLD", "GROUP_INPUT", "GROUP_OUTPUT", "REROUTE"):
+        d["inputs"] = dict(list(vals.items())[:24])
+    used_out = [s.name for s in n.outputs if s.is_linked]
+    if used_out and n.type in ("TEX_COORD", "NEW_GEOMETRY", "OBJECT_INFO", "LIGHT_PATH", "INPUT_POSITION"):
+        d["outputs_used"] = used_out
     return d
+
+
+def tree_info(nt, seen=None, depth=0):
+    """Census of a node tree: node types, settings, links, groups (followed once), outputs."""
+    seen = seen if seen is not None else set()
+    out = {"name": nt.name, "kind": nt.bl_idname, "node_count": len(nt.nodes)}
+    types = Counter(n.type for n in nt.nodes if n.type not in ("REROUTE", "FRAME"))
+    out["node_types"] = dict(types)
+    out["nodes"] = [node_info(n) for n in nt.nodes if n.type not in ("REROUTE", "FRAME")][:120]
+    links = Counter()
+    for l in nt.links:
+        if l.is_valid and not l.is_muted:
+            links[f"{l.from_node.type}.{l.from_socket.name}>{l.to_node.type}.{l.to_socket.name}"] += 1
+    out["links"] = dict(links.most_common(80))
+    groups = sorted({n.node_tree.name for n in nt.nodes if n.type == "GROUP" and n.node_tree})
+    if groups:
+        out["groups"] = groups
+        if depth < 3:
+            out["group_trees"] = []
+            for n in nt.nodes:
+                if n.type == "GROUP" and n.node_tree and n.node_tree.name not in seen:
+                    seen.add(n.node_tree.name)
+                    out["group_trees"].append(tree_info(n.node_tree, seen, depth + 1))
+    return out
+
+
+def material_info(mat):
+    d = {"name": mat.name, "users": mat.users, "use_nodes": mat.use_nodes,
+         "viewport": {"color": _vec(mat.diffuse_color)[:3], "metallic": _r(mat.metallic, 3),
+                      "roughness": _r(mat.roughness, 3)}}
+    for k in ("surface_render_method", "blend_method", "use_backface_culling", "displacement_method",
+              "use_transparency_overlap", "use_screen_refraction", "pass_index", "use_thickness_from_shadow"):
+        if hasattr(mat, k):
+            d[k] = _jsonable(getattr(mat, k))
+    if mat.use_nodes and mat.node_tree:
+        nt = mat.node_tree
+        info = tree_info(nt)
+        d["tree"] = info
+        d["nodes"] = info["node_types"]
+        d["images"] = sorted({n.image.name for n in nt.nodes if n.type == "TEX_IMAGE" and n.image})
+        if info.get("groups"):
+            d["groups"] = info["groups"]
+        out_node = next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL" and n.is_active_output), None) or \
+            next((n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"), None)
+        if out_node:
+            d["output"] = {s.name: ">".join(_upstream(s)) for s in out_node.inputs if s.is_linked}
+        pr = [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"]
+        if pr:
+            p = pr[0]
+            pbr, fed = {}, {}
+            for name in PBR_INPUTS:
+                s = p.inputs.get(name)
+                if s is None:
+                    continue
+                if s.is_linked:
+                    fed[name] = ">".join(_upstream(s))
+                else:
+                    v = _sock_value(s)
+                    if v is not None and name != "Normal":
+                        pbr[name] = v
+            d["principled"] = {"values": pbr, "linked": fed, "count": len(pr),
+                               "distribution": getattr(p, "distribution", None),
+                               "subsurface_method": getattr(p, "subsurface_method", None)}
+        shaders = Counter(n.type for n in nt.nodes if n.type.startswith("BSDF_") or n.type in
+                          ("EMISSION", "MIX_SHADER", "ADD_SHADER", "HOLDOUT", "SUBSURFACE_SCATTERING",
+                           "PRINCIPLED_VOLUME", "VOLUME_ABSORPTION", "VOLUME_SCATTER", "BACKGROUND", "EEVEE_SPECULAR"))
+        d["shaders"] = dict(shaders)
+    return d
+
+
+def world_info(w):
+    if w is None:
+        return None
+    d = {"name": w.name, "use_nodes": w.use_nodes, "color": _vec(w.color)[:3]}
+    if w.use_nodes and w.node_tree:
+        info = tree_info(w.node_tree)
+        d["tree"] = info
+        kinds = set(info["node_types"])
+        d["kind"] = ("hdri" if "TEX_ENVIRONMENT" in kinds else "sky" if "TEX_SKY" in kinds else
+                     "gradient" if kinds & {"TEX_GRADIENT", "VALTORGB"} else "color")
+        bg = next((n for n in w.node_tree.nodes if n.type == "BACKGROUND"), None)
+        if bg:
+            d["strength"] = _sock_value(bg.inputs["Strength"]) if not bg.inputs["Strength"].is_linked else "linked"
+            if not bg.inputs["Color"].is_linked:
+                d["background_color"] = _sock_value(bg.inputs["Color"])
+        env = [n.image.name for n in w.node_tree.nodes if n.type == "TEX_ENVIRONMENT" and n.image]
+        if env:
+            d["hdri"] = env
+    else:
+        d["kind"] = "color"
+    return d
+
+
+def render_info(scene):
+    r = scene.render
+    vs = scene.view_settings
+    d = {"engine": r.engine, "resolution": [r.resolution_x, r.resolution_y, r.resolution_percentage],
+         "film_transparent": r.film_transparent, "fps": r.fps,
+         "view_transform": vs.view_transform, "look": vs.look, "exposure": _r(vs.exposure, 3),
+         "gamma": _r(vs.gamma, 3), "display_device": scene.display_settings.display_device,
+         "use_curve_mapping": vs.use_curve_mapping}
+    try:
+        if r.engine == "CYCLES":
+            c = scene.cycles
+            d["samples"] = c.samples
+            d["denoise"] = c.use_denoising
+            d["device"] = c.device
+        elif "EEVEE" in r.engine:
+            e = scene.eevee
+            d["samples"] = getattr(e, "taa_render_samples", None)
+            for k in ("use_raytracing", "use_shadows", "use_gtao", "use_bloom", "use_ssr"):
+                if hasattr(e, k):
+                    d[k] = getattr(e, k)
+    except Exception:
+        pass
+    try:
+        if scene.use_nodes and scene.node_tree:
+            d["compositor"] = tree_info(scene.node_tree)
+    except Exception:
+        pass
+    return d
+
+
+def rna_defaults(struct):
+    """Blender's own default for each plain property (to tell the artist's choices from untouched settings)."""
+    out = {}
+    for p in struct.bl_rna.properties:
+        k = p.identifier
+        if k in SKIP_PROPS or p.type in ("POINTER", "COLLECTION") or k.startswith(("open_", "show_", "is_")):
+            continue
+        try:
+            if getattr(p, "is_array", False) or getattr(p, "array_length", 0) > 0:
+                out[k] = _jsonable(list(p.default_array))
+            elif p.type == "ENUM":
+                out[k] = sorted(p.default_flag) if p.is_enum_flag else p.default
+            else:
+                out[k] = _jsonable(p.default)
+        except Exception:
+            pass
+    return out
+
+
+def gn_inputs(m):
+    """Geometry Nodes modifier: the group's exposed inputs and the values set on this modifier."""
+    ng = m.node_group
+    out = {}
+    if not ng:
+        return out
+    try:
+        items = [i for i in ng.interface.items_tree if getattr(i, "item_type", "") == "SOCKET" and i.in_out == "INPUT"]
+    except Exception:
+        items = []
+    for it in items:
+        ident = it.identifier
+        if it.socket_type == "NodeSocketGeometry":
+            continue
+        v = None
+        props = getattr(m, "properties", None)  # Blender 5: modifier.properties.inputs.<Socket_N>.value
+        sock = getattr(getattr(props, "inputs", None), ident, None) if props is not None else None
+        if sock is not None:
+            if getattr(sock, "type", "") == "ATTRIBUTE" and getattr(sock, "attribute_name", ""):
+                out[it.name] = "attribute:" + sock.attribute_name
+                continue
+            v = getattr(sock, "value", None)
+        else:  # Blender 4: modifier["Socket_N"]
+            try:
+                v = m[ident]
+            except Exception:
+                continue
+        if hasattr(v, "name"):
+            v = v.name
+        elif hasattr(v, "to_list"):
+            v = v.to_list()
+        elif hasattr(v, "__len__") and not isinstance(v, str):
+            v = [_r(x) if isinstance(x, float) else x for x in v]
+        elif isinstance(v, float):
+            v = _r(v)
+        out[it.name] = v
+    return out
 
 
 def analyse():
@@ -409,6 +726,10 @@ def analyse():
                    if i.users and i.type == "IMAGE"],
         "libraries": [l.filepath for l in bpy.data.libraries],
         "node_groups": sorted(g.name for g in bpy.data.node_groups if g.users),
+        "geometry_node_groups": [tree_info(g) for g in bpy.data.node_groups
+                                 if g.bl_idname == "GeometryNodeTree" and g.users][:40],
+        "world": world_info(scene.world),
+        "render": render_info(scene),
         "text_blocks": sorted(t.name for t in bpy.data.texts),
     }
     for obj in scene.objects:
@@ -421,6 +742,16 @@ def analyse():
     # library files often keep pieces outside the scene: in unlinked collections or as fake-user objects
     extra = [o for o in bpy.data.objects if o.name not in in_scene and o.library is None]
     doc["objects_outside_scene"] = len(extra)
+    seen_types, defaults = set(), {}
+    for o in bpy.data.objects:
+        for m in getattr(o, "modifiers", []):
+            if m.type not in seen_types:
+                seen_types.add(m.type)
+                try:
+                    defaults[m.type] = rna_defaults(m)
+                except Exception:
+                    pass
+    doc["modifier_rna_defaults"] = defaults
     for obj in extra[:400]:
         try:
             info = object_info(obj, depsgraph)

@@ -262,4 +262,112 @@ for o, m in zip(parts, ("PaintDark", "Plastic", "Rubber", "Rubber", "Rubber", "S
     smooth(o)
     set_mat(o, m)
 save("blockout_radio.blend")
+# 10. shaders, geometry nodes and look-dev: a lamp post with node materials, a GN-built cable and a lit scene
+reset()
+col = coll("lamp_post")
+
+
+def pbr(name, base, metallic, roughness, rough_noise=False, emission=None):
+    m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    p.inputs["Base Color"].default_value = (*base, 1)
+    p.inputs["Metallic"].default_value = metallic
+    p.inputs["Roughness"].default_value = roughness
+    if rough_noise:  # procedural roughness break-up: Noise > Color Ramp > Roughness
+        tc = nt.nodes.new("ShaderNodeTexCoord")
+        noise = nt.nodes.new("ShaderNodeTexNoise")
+        noise.inputs["Scale"].default_value = 24.0
+        ramp = nt.nodes.new("ShaderNodeValToRGB")
+        ramp.color_ramp.elements[0].color = (0.25, 0.25, 0.25, 1)
+        ramp.color_ramp.elements[1].color = (0.55, 0.55, 0.55, 1)
+        nt.links.new(tc.outputs["Object"], noise.inputs["Vector"])
+        nt.links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+        nt.links.new(ramp.outputs["Color"], p.inputs["Roughness"])
+        bev = nt.nodes.new("ShaderNodeBevel")  # shader-only rounded edges
+        bev.inputs["Radius"].default_value = 0.002
+        nt.links.new(bev.outputs["Normal"], p.inputs["Normal"])
+    if emission:
+        p.inputs["Emission Color"].default_value = (*emission, 1)
+        p.inputs["Emission Strength"].default_value = 8.0
+    return m
+
+
+steel = pbr("SteelDark", (0.08, 0.08, 0.09), 1.0, 0.35, rough_noise=True)
+paint = pbr("PaintGreen", (0.05, 0.22, 0.12), 0.0, 0.55, rough_noise=True)
+glow = pbr("LampGlow", (1.0, 0.9, 0.7), 0.0, 0.3, emission=(1.0, 0.85, 0.6))
+pole = cyl("lamp_pole", 0.06, 4.0, loc=(0, 0, 2.0), col=col, segs=24)
+set_mat(pole, "PaintGreen")
+bevel(pole, 0.004, 3)
+weighted(pole)
+smooth(pole)
+head = box("lamp_head", (0.5, 0.25, 0.12), loc=(0.2, 0, 4.0), col=col)
+set_mat(head, "SteelDark")
+sw = head.modifiers.new("Shrinkwrap", "SHRINKWRAP")  # studied-style wrap onto a target
+sw.target = pole
+sw.wrap_method = "NEAREST_SURFACEPOINT"
+sw.offset = 0.001
+sw.show_viewport = False
+es = head.modifiers.new("EdgeSplit", "EDGE_SPLIT")
+es.split_angle = math.radians(30)
+lens = box("lamp_lens", (0.4, 0.2, 0.01), loc=(0.2, 0, 3.94), col=col)
+set_mat(lens, "LampGlow")
+# geometry nodes: a cable made from a curve, with an exposed radius input
+ng = bpy.data.node_groups.new("CableFromCurve", "GeometryNodeTree")
+ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+rad = ng.interface.new_socket("Radius", in_out="INPUT", socket_type="NodeSocketFloat")
+rad.default_value = 0.01
+ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+gi = ng.nodes.new("NodeGroupInput")
+go = ng.nodes.new("NodeGroupOutput")
+c2m = ng.nodes.new("GeometryNodeCurveToMesh")
+circ = ng.nodes.new("GeometryNodeCurvePrimitiveCircle")
+circ.inputs["Resolution"].default_value = 12
+ng.links.new(gi.outputs["Radius"], circ.inputs["Radius"])
+ng.links.new(gi.outputs["Geometry"], c2m.inputs["Curve"])
+ng.links.new(circ.outputs["Curve"], c2m.inputs["Profile Curve"])
+ng.links.new(c2m.outputs["Mesh"], go.inputs["Geometry"])
+cd = bpy.data.curves.new("lamp_cable", "CURVE")
+cd.dimensions = "3D"
+sp = cd.splines.new("POLY")
+sp.points.add(3)
+for i, pt in enumerate(((0.06, 0, 3.6, 1), (0.3, 0.1, 3.0, 1), (0.4, 0.1, 1.5, 1), (0.5, 0, 0.0, 1))):
+    sp.points[i].co = pt
+cable = bpy.data.objects.new("lamp_cable", cd)
+col.objects.link(cable)
+gm = cable.modifiers.new("Cable", "NODES")
+gm.node_group = ng
+for it in ng.interface.items_tree:
+    if getattr(it, "in_out", "") == "INPUT" and it.name == "Radius":
+        props = getattr(gm, "properties", None)
+        if props is not None and hasattr(props, "inputs"):
+            getattr(props.inputs, it.identifier).value = 0.012  # Blender 5
+        else:
+            gm[it.identifier] = 0.012  # Blender 4
+# look-dev: sky world, a sun and an area light, a 50 mm camera, AgX
+sc = bpy.context.scene
+w = bpy.data.worlds.new("Sky")
+w.use_nodes = True
+sky = w.node_tree.nodes.new("ShaderNodeTexSky")
+w.node_tree.links.new(sky.outputs["Color"], w.node_tree.nodes["Background"].inputs["Color"])
+w.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.6
+sc.world = w
+for kind, energy, loc in (("SUN", 3.0, (4, -4, 8)), ("AREA", 400.0, (-3, -3, 4))):
+    ld = bpy.data.lights.new(f"{kind.lower()}_key", kind)
+    ld.energy = energy
+    lo = bpy.data.objects.new(f"{kind.lower()}_key", ld)
+    sc.collection.objects.link(lo)
+    lo.location = loc
+camd = bpy.data.cameras.new("review_cam")
+camd.lens = 50
+camo = bpy.data.objects.new("review_cam", camd)
+sc.collection.objects.link(camo)
+camo.location = (6, -6, 3)
+sc.camera = camo
+try:
+    sc.view_settings.view_transform = "AgX"
+except TypeError:
+    pass
+save("lookdev_lamp_post.blend")
 print("FIXTURES_OK")

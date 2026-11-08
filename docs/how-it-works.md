@@ -41,8 +41,15 @@ An analysis document contains:
 | `collections` | the collection tree, with object counts and asset marks |
 | `objects[]` | per object: type, data name and users (for instancing), parent, collections, visibility, display type, location, rotation, scale, dimensions, where the origin sits in the bounding box, asset or fake-user status, material slots, and the **modifier stack** with the settings that carry style for each modifier type |
 | `objects[].mesh` | vertex, face, triangle, quad and n-gon counts; quad ratio; surface area; sizes of n-gon caps (how many segments round parts get); poles; non-manifold edges; loose parts; edge-length spread (the 10th percentile against the median shows how tight support loops are); sharp, seam, crease and bevel-weight edges; custom normals; UV islands, seams, texel density, density spread, packing and UDIM tiles; triangle count after modifiers |
+| `objects[].modifiers[]` | every modifier, any type: the curated fields plus **every** setting it has (`settings`), names of linked objects (Shrinkwrap targets, cutters, mirror objects), and for Geometry Nodes the group and the values set on its exposed inputs (works with both the Blender 4 and Blender 5 input APIs) |
+| `modifier_rna_defaults` | Blender's own default for every setting of each modifier type in the file, so SkillBlend can tell your choices from untouched settings |
 | `objects[].empty` | display type, size and child count: pivot and socket empties |
-| `materials[]` | names, users and node types (procedural or image-textured) |
+| `objects[].light`, `.camera` | light type, power, colour, size; camera type, lens, sensor, clipping, depth of field |
+| extras per object | constraints, animation and drivers, colour attributes, shape keys, particle systems |
+| `materials[]` | for every material: viewport values, render method, backface culling, displacement method, and the **whole node tree**: each node's type and settings (texture scales, Color Ramp stops, image size and colour space, projection), unlinked input values, every link (`TEX_NOISE.Fac>VALTORGB.Fac`), node groups followed inside, what feeds the material output, the Principled BSDF values, and for each Principled input that's driven by nodes, the chain that drives it |
+| `world` | world colour, or its node tree: HDRI (environment texture), sky, gradient or flat colour, and strength |
+| `render` | engine, samples, resolution, transparent film, colour management (view transform, look, exposure, gamma), and the compositor tree if used |
+| `geometry_node_groups[]` | every Geometry Nodes group in use, with its full node tree |
 | `images[]`, `libraries[]`, `node_groups[]` | what the file references |
 
 Objects outside the scene are read too. Kit libraries often keep pieces in unlinked collections or as fake-user objects.
@@ -105,6 +112,9 @@ Some measurements are more than a median:
 - **Detail density.** Triangles per cm² after modifiers, in three size bands (under 5 cm, 5 to 50 cm, over 50 cm).
 - **Round parts.** The most common n-gon cap sizes give the segment counts used on cylinders.
 - **Vehicles.** A file counts as a vehicle only with at least three tyre- or wheel-named parts. A ship's `wheel_post` doesn't count.
+- **Modifier dictionary.** For every modifier type in the project, every setting's typical value (median for numbers, most common for the rest) is compared with Blender's own default. The skill lists what you change, with how many instances agree (`references/modifier-dictionary.md`), and `style.modifier(obj, TYPE)` adds any modifier with those settings.
+- **Shader recipes.** Materials are grouped by name across files: median base colour, metallic, roughness, emission, IOR and transmission, plus the node chain that drives each input. `style.material(obj, name)` rebuilds the material from its recipe, including a noise roughness break-up or a shader bevel when you use them.
+- **Shading methods.** Counts of every texture node, the most common chain into each Principled input, image sizes and colour spaces, texture-coordinate outputs, and helpers such as Bump, Normal Map, Ambient Occlusion, Geometry, Color Ramp, Mapping and Attribute nodes.
 
 ## 6. Building the skill
 

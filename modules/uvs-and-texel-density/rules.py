@@ -21,12 +21,13 @@ def rules(ctx):
     per_file = [L.median(o["mesh"]["uv"]["uv_per_m"] for o in parts_f) * tex
                 for d in ctx.files for parts_f in [[o for o in L.meshes(d) if o["mesh"].get("uv", {}).get("uv_per_m")]] if parts_f]
     if len(per_file) > 1:
-        r.number("texel_density_range_px_per_m", [round(min(upm) * tex), round(max(upm) * tex)], "lowest and highest export part")
+        r.number("texel_density_range_px_per_m", [round(L.pct(upm, 0.05) * tex), round(L.pct(upm, 0.95) * tex)],
+                 "5th-95th percentile of export parts")
         if max(per_file) > 2 * min(per_file):
             r.rule(f"Density follows the asset, not one fixed number: {', '.join(L.fmt(x) for x in sorted(per_file))} px/m across "
                    "the files. Each asset gets its own texture set, so small assets land far denser than big ones.")
     r.rule(f"Texel density: about {L.fmt(td)} px per metre at {tex} px "
-           f"(spread across parts {L.fmt(min(upm) * tex)} to {L.fmt(max(upm) * tex)}).")
+           f"(most parts between {L.fmt(L.pct(upm, 0.05) * tex)} and {L.fmt(L.pct(upm, 0.95) * tex)}).")
     r.headline(f"Export meshes are unwrapped to about {L.fmt(td)} px/m at {tex} px"
                + (" (density follows the asset)" if len(per_file) > 1 and max(per_file) > 2 * min(per_file) else "") + ".")
     cv = [o["mesh"]["uv"].get("density_cv") for o in parts if o["mesh"]["uv"].get("density_cv") is not None]

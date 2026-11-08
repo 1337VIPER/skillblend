@@ -17,7 +17,12 @@ def slug(s):
     return s[:60] or "blender-modelling"
 
 
-def _fmt_val(v):
+REF_FOR = {"modifier_defaults": "references/modifier-dictionary.md", "material_recipes": "references/shader-recipes.md"}
+
+
+def _fmt_val(v, key=None):
+    if isinstance(v, dict):
+        return f"{len(v)} entries ({', '.join(list(v)[:5])}{'...' if len(v) > 5 else ''})" + (f", see {REF_FOR[key]}" if key in REF_FOR else "")
     if isinstance(v, float):
         return f"{v:.4g}"
     if isinstance(v, list):
@@ -153,6 +158,11 @@ def build(ws, name=None, author=None, generic=False, exclude=(), include_example
         with open(os.path.join(out, "references", "kit-catalogue.md"), "w", encoding="utf-8") as fh:
             fh.write("\n".join(rows) + "\n")
 
+    for r_ in results.values():
+        for fname, text in (r_.extra.get("reference_md") or {}).items():
+            with open(os.path.join(out, "references", os.path.basename(fname)), "w", encoding="utf-8") as fh:
+                fh.write(text)
+
     # ---- SKILL.md
     covered = [m for m in mods if personal and analyses.get(m["id"])]
     text = render_skill(sname, name, author, personal, mods, results, analyses, style, source,
@@ -219,7 +229,9 @@ def render_skill(sname, name, author, personal, mods, results, analyses, style, 
             if kits else []),
           "- Load the style at the top of every build script: `sys.path.insert(0, r\"<this skill>/scripts\")`, then `import style`. "
           "`style.setup_scene()`, `style.name()`, `style.box()`, `style.bevel()`, `style.finish()`, `style.subd()`, "
-          "`style.cutter()`, `style.order_stack()`, `style.material()`, `style.kit_piece()` and `style.texel_density()` all use the numbers in `style.json`.",
+          "`style.cutter()`, `style.order_stack()`, `style.modifier()` (any modifier type, with the artist's typical settings), "
+          "`style.material()` (rebuilds the artist's measured material recipes), `style.setup_render()`, `style.kit_piece()` "
+          "and `style.texel_density()` all use the numbers in `style.json`.",
           "- Before calling a model done, run `blender -b --factory-startup MODEL.blend --python <this skill>/scripts/style_check.py` "
           "and fix every warning, or tell the user why it's intended. It must end with `STYLE ok` or only notes you can explain.",
           "- Render review shots (front, side, top, 3/4 and close-ups of the busiest areas) and compare them with the reference before adding detail.",
@@ -230,7 +242,7 @@ def render_skill(sname, name, author, personal, mods, results, analyses, style, 
               "modifier stacks and topology (`scripts/stack_audit.py` prints a file's stacks, if this skill has it)."]
     L += ["", "## Style card", "", "| Setting | Value | From |", "|---|---|---|"]
     for k in sorted(style):
-        L.append(f"| `{k}` | {_fmt_val(style[k])} | {source.get(k, '')} |")
+        L.append(f"| `{k}` | {_fmt_val(style[k], k)} | {source.get(k, '')} |")
     L.append("")
     for m in mods:
         r = results.get(m["id"])
@@ -249,6 +261,8 @@ def render_skill(sname, name, author, personal, mods, results, analyses, style, 
             extras.append(f"[references/{m['id']}.md](references/{m['id']}.md)")
         if m["id"] == "kit-library" and r and r.extra.get("kit_catalogue"):
             extras.append("[references/kit-catalogue.md](references/kit-catalogue.md)")
+        for fname in ((r.extra.get("reference_md") or {}) if r else {}):
+            extras.append(f"[references/{fname}](references/{fname})")
         for f in module_scripts.get(m["id"], []):
             extras.append(f"`scripts/{f}`")
         if extras:

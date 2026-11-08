@@ -1,0 +1,27 @@
+{
+  "id": "lookdev-and-render",
+  "order": 12,
+  "title": "Lighting, world and render",
+  "optional": true,
+  "summary": "The scene you judge models in: render engine, colour management, world (HDRI, sky or flat colour), your light rig and review camera.",
+  "request": {
+    "brief": "Submit a file with the lighting and camera you use to review or present a model.",
+    "must_include": [
+      "Your world setup",
+      "Your lights",
+      "Your review or presentation camera"
+    ],
+    "submit": "One .blend file.",
+    "ideas": [
+      "a turntable setup",
+      "a studio light rig",
+      "a portfolio render scene"
+    ]
+  },
+  "questions": [
+    {
+      "key": "lookdev_notes",
+      "ask": "Do you review models in Blender's render, in Marmoset or in the engine?"
+    }
+  ]
+}

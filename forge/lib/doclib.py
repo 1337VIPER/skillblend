@@ -235,3 +235,81 @@ def export_role(doc):
 
 def name_tokens(name):
     return [t for t in re.split(r"[^a-z]+", strip_suffix(name).lower()) if t]
+
+
+# ------------------------------------------------------------------ node trees (materials, world, geometry nodes)
+NODE_NICE = {"BSDF_PRINCIPLED": "Principled BSDF", "TEX_NOISE": "Noise Texture", "TEX_VORONOI": "Voronoi Texture",
+             "TEX_MUSGRAVE": "Musgrave Texture", "TEX_WAVE": "Wave Texture", "TEX_IMAGE": "Image Texture",
+             "TEX_GRADIENT": "Gradient Texture", "TEX_MAGIC": "Magic Texture", "TEX_BRICK": "Brick Texture",
+             "TEX_CHECKER": "Checker Texture", "TEX_COORD": "Texture Coordinate", "TEX_ENVIRONMENT": "Environment Texture",
+             "TEX_SKY": "Sky Texture", "TEX_WHITE_NOISE": "White Noise", "VALTORGB": "Color Ramp", "MAPPING": "Mapping",
+             "NORMAL_MAP": "Normal Map", "BUMP": "Bump", "BEVEL": "Bevel (shader)", "AMBIENT_OCCLUSION": "Ambient Occlusion",
+             "MIX": "Mix", "MIX_RGB": "Mix RGB", "MIX_SHADER": "Mix Shader", "ADD_SHADER": "Add Shader", "EMISSION": "Emission",
+             "BSDF_GLASS": "Glass BSDF", "BSDF_DIFFUSE": "Diffuse BSDF", "BSDF_GLOSSY": "Glossy BSDF", "BSDF_TRANSPARENT": "Transparent BSDF",
+             "BSDF_TRANSLUCENT": "Translucent BSDF", "BSDF_TOON": "Toon BSDF", "BSDF_METALLIC": "Metallic BSDF",
+             "ATTRIBUTE": "Attribute", "VERTEX_COLOR": "Color Attribute", "GEOMETRY": "Geometry", "LAYER_WEIGHT": "Layer Weight",
+             "FRESNEL": "Fresnel", "MATH": "Math", "VECT_MATH": "Vector Math", "MAP_RANGE": "Map Range", "CURVE_RGB": "RGB Curves",
+             "HUE_SAT": "Hue/Saturation", "INVERT": "Invert", "SEPARATE_COLOR": "Separate Color", "COMBINE_COLOR": "Combine Color",
+             "DISPLACEMENT": "Displacement", "NEW_GEOMETRY": "Geometry", "TEX_NOISE_4D": "Noise Texture", "GROUP": "Node Group", "UVMAP": "UV Map", "OBJECT_INFO": "Object Info",
+             "LIGHT_PATH": "Light Path", "RGB": "RGB", "VALUE": "Value", "BRIGHTCONTRAST": "Bright/Contrast",
+             "CURVE_TO_MESH": "Curve to Mesh", "CURVE_PRIMITIVE_CIRCLE": "Curve Circle", "INSTANCE_ON_POINTS": "Instance on Points",
+             "REALIZE_INSTANCES": "Realize Instances", "DISTRIBUTE_POINTS_ON_FACES": "Distribute Points on Faces",
+             "MESH_BOOLEAN": "Mesh Boolean", "EXTRUDE_MESH": "Extrude Mesh", "SET_MATERIAL": "Set Material",
+             "STORE_NAMED_ATTRIBUTE": "Store Named Attribute", "SET_SHADE_SMOOTH": "Set Shade Smooth",
+             "SUBDIVISION_SURFACE": "Subdivision Surface", "SUBDIVIDE_MESH": "Subdivide Mesh", "COLLECTION_INFO": "Collection Info",
+             "MESH_TO_CURVE": "Mesh to Curve", "RESAMPLE_CURVE": "Resample Curve", "SET_POSITION": "Set Position",
+             "TRANSFORM_GEOMETRY": "Transform Geometry", "JOIN_GEOMETRY": "Join Geometry", "MESH_LINE": "Mesh Line",
+             "MESH_PRIMITIVE_CUBE": "Cube", "MESH_PRIMITIVE_CYLINDER": "Cylinder", "MESH_PRIMITIVE_GRID": "Grid",
+             "FILL_CURVE": "Fill Curve", "CURVE_PRIMITIVE_LINE": "Curve Line", "SET_CURVE_RADIUS": "Set Curve Radius"}
+UTIL_NODES = {"GROUP_INPUT", "GROUP_OUTPUT", "OUTPUT_MATERIAL", "OUTPUT_WORLD", "REROUTE", "FRAME", "NodeGroupInput",
+              "NodeGroupOutput"}
+
+
+def node_name(t):
+    if t.startswith("GROUP:"):
+        return "group " + t[6:]
+    return NODE_NICE.get(t, t.replace("_", " ").title())
+
+
+def chain_name(sig):
+    """'TEX_COORD>TEX_NOISE>VALTORGB' -> 'Texture Coordinate > Noise Texture > Color Ramp'."""
+    names = [node_name(t) for t in sig.split(">") if t]
+    out = []
+    for n in names:
+        if out and out[-1][0] == n:
+            out[-1][1] += 1
+        else:
+            out.append([n, 1])
+    return " > ".join(n + (f" x{c}" if c > 1 else "") for n, c in out)
+
+
+def tree_nodes(tree):
+    """Every node dict in a tree, including inside its node groups."""
+    if not tree:
+        return
+    for n in tree.get("nodes", []):
+        yield n
+    for g in tree.get("group_trees", []) or []:
+        yield from tree_nodes(g)
+
+
+def tree_types(tree):
+    from collections import Counter
+    c = Counter()
+    if not tree:
+        return c
+    c.update(tree.get("node_types", {}))
+    for g in tree.get("group_trees", []) or []:
+        c.update(tree_types(g))
+    return c
+
+
+def materials(doc):
+    return [m for m in doc.get("materials", []) if m.get("users", 1)]
+
+
+SMOOTH_GROUPS = ("smooth by angle", "auto smooth")
+
+
+def is_smooth_group(name):
+    return any(s in (name or "").lower() for s in SMOOTH_GROUPS)

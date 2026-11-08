@@ -248,7 +248,9 @@ const NICE = {BEVEL:"Bevel", SUBSURF:"Subdivision", WEIGHTED_NORMAL:"Weighted No
   EDGE_SPLIT:"Edge Split", SIMPLE_DEFORM:"Simple Deform", WIREFRAME:"Wireframe", LATTICE:"Lattice", DATA_TRANSFER:"Data Transfer",
   EXACT:"Exact", FAST:"Fast", FLOAT:"Float", DIFFERENCE:"Difference", UNION:"Union", INTERSECT:"Intersect", WIRE:"wireframe",
   BOUNDS:"bounds", ANGLE:"angle", WEIGHT:"bevel weight", METRIC:"metric", COLLECTION:"collection", FIXED_COUNT:"fixed count",
-  MITER_ARC:"arc", MITER_SHARP:"sharp", TEXTURED:"solid"};
+  MITER_ARC:"arc", MITER_SHARP:"sharp", TEXTURED:"solid", DITHERED:"dithered", BLENDED:"blended", AGX:"AgX",
+  NEAREST_SURFACEPOINT:"nearest surface point", ON_SURFACE:"on surface", PROJECT:"project", OBJECT:"object", PERCENT:"percent", OFFSET:"offset",
+  BLENDER_EEVEE:"EEVEE", BLENDER_EEVEE_NEXT:"EEVEE", CYCLES:"Cycles", SUN:"sun", AREA:"area", POINT:"point", SPOT:"spot", PRINCIPLED:"Principled"};
 const nice = s => String(s).replace(/\b[A-Z][A-Z_]{2,}\b/g, w => NICE[w] || w)
   .replace(/\bthe artist's\b/g, "your").replace(/\bThe artist's\b/g, "Your").replace(/\bthe artist\b/g, "you").replace(/\bThe artist\b/g, "You");
 const md = s => esc(nice(s)).replace(/`([^`]+)`/g, '<span class="mono">$1</span>');
@@ -268,7 +270,16 @@ const FACTS = {
   "subd-topology": [["subd_levels_viewport","SubD level", (v, n) => v + " (render " + (n.subd_levels_render ?? v) + ")"], ["subd_quad_ratio_min","Quads in cages", v => "≥ " + pct(v)],
                       ["subd_use_creases","Creases", yes]],
   "booleans-and-cutters": [["boolean_solver","Boolean solver", nice], ["cutter_display","Cutters shown as", nice], ["cutter_collection","Cutter collection", v => v], ["boolean_keep_live","Kept live", yes]],
-  "modifier-stacks": [["stack_order","Modifier order", v => v.map(nice).join(" → ")]],
+  "modifier-stacks": [["stack_order","Modifier order", v => v.map(nice).join(" → ")],
+                      ["modifier_defaults","Modifier types used", v => Object.keys(v).length + ": " + Object.keys(v).slice(0,5).map(nice).join(", ")]],
+  "shaders-and-nodes": [["shader_model","Shader", v => v === "principled" ? "Principled BSDF" : nice(String(v).toUpperCase())],
+                      ["texturing","Texturing", v => ({procedural:"Procedural", image:"Image textures", mixed:"Procedural + images", flat:"Flat values"}[v] || v)],
+                      ["texture_coordinates","Texture coordinates", v => v], ["uses_shader_bevel","Shader bevel on edges", yes],
+                      ["material_recipes","Materials measured", v => Object.keys(v).length + ": " + Object.keys(v).slice(0,4).join(", ")]],
+  "geometry-nodes": [["gn_groups","Node groups", v => v.slice(0,3).join(", ")], ["gn_purposes","Used for", v => v.slice(0,2).join("; ")]],
+  "lookdev-and-render": [["render_engine","Render engine", v => ({BLENDER_EEVEE:"EEVEE", BLENDER_EEVEE_NEXT:"EEVEE", CYCLES:"Cycles", BLENDER_WORKBENCH:"Workbench"}[v] || v)],
+                      ["view_transform","Colour management", v => v], ["world_kind","World", v => ({hdri:"HDRI", sky:"Sky", gradient:"Gradient", color:"Flat colour"}[v] || v)],
+                      ["light_rig","Lights", v => v.map(x => x.toLowerCase()).join(" + ")], ["review_lens_mm","Camera lens", v => v + " mm"]],
   "kit-library": [["insert_instancing","Inserts placed as", v => String(v).replace("-", " ")]],
   "materials-and-slots": [["material_palette","Palette", v => v.slice(0,6).join(", ")], ["slots_per_part","Materials per part", v => v]],
   "uvs-and-texel-density": [["texel_density_px_per_m","Texture detail", v => v + " px per metre"], ["texture_size","Texture size", v => v + " px"],
@@ -290,6 +301,9 @@ const ICONS = {
   "materials-and-slots": '<circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.6"/><circle cx="12" cy="7.5" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/>',
   "uvs-and-texel-density": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>',
   "game-ready-export": '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/>',
+  "shaders-and-nodes": '<circle cx="12" cy="12" r="9"/><path d="M8.5 8.5a5 5 0 0 1 5-2"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 3" opacity=".4"/>',
+  "geometry-nodes": '<rect x="2" y="4" width="7" height="6" rx="1.5"/><rect x="15" y="14" width="7" height="6" rx="1.5"/><rect x="15" y="4" width="7" height="6" rx="1.5"/><path d="M9 7h6M9 7c3 0 3 10 6 10"/>',
+  "lookdev-and-render": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   "vehicles": '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 17V12l3-5h9l4 5h2v5"/>',
 };
 const icon = id => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[id] || ICONS["structure-and-assemblies"]}</svg>`;
@@ -464,7 +478,9 @@ function renderCards(){
     const head = m.headlines.length ? `<div class="headline">${m.headlines.map(md).join(" ")}</div>` : "";
     const rules = m.rules.map(r => `<li>${md(r)}</li>`).join("");
     const fs = mine ? facts(m) : "";
-    const tech = Object.entries(m.numbers).map(([k, v]) => `<span class="num" title="${esc(m.notes[k] || "")}">${esc(k)}: ${esc(Array.isArray(v) ? v.join(" > ") : v)}</span>`).join("");
+    const show = v => Array.isArray(v) ? v.map(x => typeof x === "object" ? JSON.stringify(x) : x).join(" > ")
+                     : (v && typeof v === "object") ? (Object.keys(v).length + " entries: " + Object.keys(v).slice(0, 6).join(", ") + (Object.keys(v).length > 6 ? "…" : "")) : v;
+    const tech = Object.entries(m.numbers).map(([k, v]) => `<span class="num" title="${esc(m.notes[k] || "")}">${esc(k)}: ${esc(show(v))}</span>`).join("");
     const warns = m.warnings.map(w => `<div class="warn"><b>Worth a look</b>${md(w)}</div>`).join("");
     const qs = m.questions.map(q => {
       const cur = m.answers[q.key];

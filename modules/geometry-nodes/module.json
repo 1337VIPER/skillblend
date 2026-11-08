@@ -1,0 +1,26 @@
+{
+  "id": "geometry-nodes",
+  "order": 6,
+  "title": "Geometry Nodes",
+  "optional": true,
+  "summary": "Which Geometry Nodes setups you build and what for: pipes and cables from curves, instancing and scattering parts, procedural meshes, attributes.",
+  "request": {
+    "brief": "Submit a file where you use Geometry Nodes on a model: a cable or pipe run, an instanced pattern, a scatter, or any custom node setup.",
+    "must_include": [
+      "The Geometry Nodes modifier left live",
+      "The node group with its exposed inputs"
+    ],
+    "submit": "One .blend file.",
+    "ideas": [
+      "cables from curves",
+      "bolts instanced on a flange",
+      "a procedural vent grille"
+    ]
+  },
+  "questions": [
+    {
+      "key": "gn_notes",
+      "ask": "What do you mainly use Geometry Nodes for?"
+    }
+  ]
+}

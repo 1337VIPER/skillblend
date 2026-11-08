@@ -43,3 +43,16 @@ b.object = cyl
 b.solver = "FLOAT" if "FLOAT" in [i.identifier for i in b.bl_rna.properties["solver"].enum_items] else "FAST"
 bpy.ops.wm.save_as_mainfile(filepath=bad_path)
 print("USE_OK")
+
+# deeper style helpers: any modifier with the artist's settings, recipe materials, review render setup
+bpy.ops.wm.read_factory_settings(use_empty=True)
+style.setup_scene()
+part = style.box("deep_part", (0.2, 0.1, 0.05))
+sw = style.modifier(part, "SOLIDIFY")
+print("DEEP solidify", round(sw.thickness, 4))
+mat = style.material(part, "SteelDark")
+p = next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+print("DEEP steel metallic", p.inputs["Metallic"].default_value, "roughness linked", p.inputs["Roughness"].is_linked)
+sc = style.setup_render()
+print("DEEP render", sc.render.engine, sc.view_settings.view_transform, sc.world is not None)
+print("DEEP_OK")

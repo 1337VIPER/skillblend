@@ -102,6 +102,7 @@ def main():
     good, bad = os.path.join(tmp, "good.blend"), os.path.join(tmp, "bad.blend")
     out = blender_run(exe, "--python", os.path.join(HERE, "use_built_skill.py"), "--", pdir, good, bad)
     check("USE_OK" in out, "style.py builds a model")
+    check("DEEP_OK" in out and "DEEP solidify" in out, "style.modifier / style.material / style.setup_render work")
     out = blender_run(exe, good, "--python", os.path.join(pdir, "scripts", "style_check.py"))
     check("STYLE 0 warning" in out or "STYLE ok" in out, "a model built with style.py passes the check")
     out = blender_run(exe, bad, "--python", os.path.join(pdir, "scripts", "style_check.py"))
@@ -117,13 +118,26 @@ def main():
     expect = {"subd_nozzle.blend": "subd-topology", "boolean_panel.blend": "booleans-and-cutters",
               "kit_library.blend": "kit-library", "gameready_canister.blend": "game-ready-export",
               "vehicle_body.blend": "vehicles", "stack_rail.blend": "modifier-stacks",
-              "bevel_junction_box.blend": "bevels-and-shading"}
+              "bevel_junction_box.blend": "bevels-and-shading",
+              "lookdev_lamp_post.blend": "shaders-and-nodes"}
     for f, mid in expect.items():
         check(mid in det.get(f, set()), f"learn detects {mid} in {f}")
     check("vehicles" not in det.get("boolean_panel.blend", set()), "no false vehicle")
+    check({"geometry-nodes", "lookdev-and-render"} <= det.get("lookdev_lamp_post.blend", set()),
+          "learn detects Geometry Nodes and look-dev in the lamp post")
     code, out = forge(ws2, "build", "--json")
     res2 = json.loads(out) if code == 0 else {}
     check(code == 0 and res2.get("personal") and "subd-topology" in res2.get("covered", []), "builds from a learned project")
+    st2 = json.load(open(os.path.join(res2.get("dir", ""), "style.json"))) if res2.get("dir") else {"numbers": {}}
+    n2 = st2["numbers"]
+    check("SHRINKWRAP" in (n2.get("modifier_defaults") or {}) and "EDGE_SPLIT" in (n2.get("modifier_defaults") or {}),
+          "modifier dictionary covers every modifier type (Shrinkwrap, Edge Split)")
+    rec = (n2.get("material_recipes") or {}).get("SteelDark") or {}
+    check(rec.get("metallic") == 1.0 and "Roughness" in (rec.get("procedural") or {}), "shader recipe measured (SteelDark)")
+    check(n2.get("view_transform") == "AgX" and n2.get("world_kind") == "sky", "look-dev measured (AgX, sky world)")
+    check(n2.get("gn_groups") == ["CableFromCurve"], "Geometry Nodes group measured")
+    refs = os.listdir(os.path.join(res2["dir"], "references")) if res2.get("dir") else []
+    check("modifier-dictionary.md" in refs and "shader-recipes.md" in refs, "reference tables written into the skill")
 
     print("app API")
     sys.path.insert(0, REPO)

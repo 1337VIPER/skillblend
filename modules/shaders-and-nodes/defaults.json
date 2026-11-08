@@ -1,0 +1,6 @@
+{
+  "shader_model": "principled",
+  "texturing": "procedural",
+  "uses_shader_bevel": false,
+  "_notes": "Standard method: Principled BSDF, flat PBR values with procedural roughness break-up for review; final texturing happens after the bake."
+}

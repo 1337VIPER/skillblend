@@ -20,10 +20,10 @@ from . import modules as modlib, paths
 sys.path.insert(0, paths.LIB)
 import doclib  # noqa: E402
 
-ANALYSER_VERSION = 2  # bump with forge/blender/analyse_blend.py VERSION to re-read every file
+ANALYSER_VERSION = 3  # bump with forge/blender/analyse_blend.py VERSION to re-read every file
 SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv"}
 SKIP_PATTERNS = ["*backup*", "*autosave*", "*recovered*", "*_before_*", "*.blend[0-9]*", "*_bak*", "*_old*",
-                 "*quit.blend", "*_test.blend", "*untitled*", "*uvtest*", "*_r[0-9][0-9][0-9].blend",
+                 "*quit.blend", "*_test.blend", "*untitled*", "*unsaved*", "*uvtest*", "*_r[0-9][0-9][0-9].blend",
                  "*/prev/*", "*/old/*", "*/archive/*", "*/backup*/*", "*/wip/*"]
 # folders whose names start with "_" (_prev, _stages, _review, _render...) hold revisions and scratch, not deliverables
 SKIP_UNDERSCORE_DIRS = True

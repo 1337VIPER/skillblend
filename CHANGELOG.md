@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0 (2026-11-08)
+
+Deeper analysis: SkillBlend now researches every modifier, every node tree and how you shade and light.
+
+- **Every modifier, every setting.** The analyser records all settings of any modifier type (not just a fixed list), including Shrinkwrap targets, Edge Split, Geometry Nodes inputs, and Blender's own defaults. A new **modifier dictionary** in each skill lists every modifier type you use and every setting you change from the defaults; `style.modifier(obj, TYPE)` adds any modifier with your typical settings.
+- **Shaders and node setups** (new): your whole material node trees - shader model, procedural or image texturing, the node chains you use for base colour, roughness, metallic and normals, image sizes and colour spaces, Bump/Normal Map/AO/shader-Bevel tricks, shared shader groups - and **shader recipes** per material name. `style.material(obj, name)` rebuilds your measured materials.
+- **Geometry Nodes** (new): your node groups, what they're for and the input values you set.
+- **Lighting, world and render** (new): render engine, colour management, world (HDRI, sky or colour), light rig and camera lenses. `style.setup_render()` sets up review renders the same way.
+- Lights, cameras, constraints, animation, colour attributes, shape keys and particle systems are recorded per object.
+- Works with Blender 5's new Geometry Nodes input API.
+- Fixes: session copies (`*unsaved*`) are skipped; texture-detail ranges ignore extreme outliers; repeated nodes in a chain read "Math x4".
+
 ## 0.1.0 (2026-11-08)
 
 First public release.

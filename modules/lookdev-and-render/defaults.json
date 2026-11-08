@@ -1,0 +1,8 @@
+{
+  "render_engine": "BLENDER_EEVEE",
+  "view_transform": "AgX",
+  "world_kind": "sky",
+  "world_strength": 1.0,
+  "review_lens_mm": 50,
+  "_notes": "Standard review setup; assumed values."
+}

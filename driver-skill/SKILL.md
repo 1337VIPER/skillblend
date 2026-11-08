@@ -1,6 +1,6 @@
 ---
 name: skillblend
-description: Run SkillBlend, the app that learns how an artist's Blender project was built and turns it into a Claude Code skill (point it at a project folder; it finds the .blend files and detects each technique itself), or its guided interview that turns an artist's own .blend files into a Claude Code skill that models like them. It asks for specific example models (one per technique module: setup and naming, blockout to detail, bevels and shading, SubD topology, booleans, modifier stacks, kit library, UVs, game-ready export, vehicles), measures how each was built, asks a few questions, then builds and installs the skill. With no submissions it builds the generic skill. Use whenever the user wants to make a Blender modelling skill from their own work or project, says "start skillblend", "open skillblend", "learn my project", "teach Claude how I model", "make a skill from my models", asks what to submit next, or wants to submit a .blend, rebuild or install their modelling skill.
+description: Run SkillBlend, the app that learns how an artist's Blender project was built and turns it into a Claude Code skill (point it at a project folder; it finds the .blend files and detects each technique itself), or its guided interview that turns an artist's own .blend files into a Claude Code skill that models like them. It asks for specific example models (one per technique module: setup and naming, parts and assemblies, blockout to detail, bevels and shading, SubD, booleans, modifier stacks, Geometry Nodes, kit library, materials, shaders and node setups, UVs, game-ready export, vehicles, lighting and render), measures how each was built, asks a few questions, then builds and installs the skill. With no submissions it builds the generic skill. Use whenever the user wants to make a Blender modelling skill from their own work or project, says "start skillblend", "open skillblend", "learn my project", "teach Claude how I model", "make a skill from my models", asks what to submit next, or wants to submit a .blend, rebuild or install their modelling skill.
 ---
 
 # SkillBlend (interview driver)
@@ -17,7 +17,7 @@ You are the interviewer. The artist models; you request, measure, ask and build.
 
 ## 1. Start
 1. `status --json`. If `blender` is null, ask the artist for the path to blender.exe (or the Blender app) and run `config --blender PATH`. If no author is set, ask what name the skill should credit and run `config --author "NAME"` (they may decline; that's fine).
-2. Explain the deal in two or three lines. There are 10 technique modules. Each asks for one specific model that shows that technique. Every module they submit makes the skill more like them. Anything they skip falls back to the generic workflow. They can stop at any time and build.
+2. Explain the deal in two or three lines. There are 16 technique modules (build scripts are read from the project, the rest can be requested). Each asks for one specific model that shows that technique. Every module they submit makes the skill more like them. Anything they skip falls back to the generic workflow. They can stop at any time and build.
 3. Ask whether they want to go through every module, pick some, or build the generic skill straight away.
 
 ## 2. Each module

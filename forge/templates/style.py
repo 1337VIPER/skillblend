@@ -238,16 +238,112 @@ def finish(ob, bevel_part=True, tier=1.0):
     return ob
 
 
+# ------------------------------------------------------------------ any modifier, with the artist's settings
+NAME_KEYS = {"target", "object", "vertex_group", "collection", "node_group", "offset_object", "mirror_object",
+             "start_cap", "end_cap", "auxiliary_target", "texture", "texture_coords_object", "origin", "curve"}
+
+
+def modifier(ob, mtype, name=None, **overrides):
+    """Add any modifier (e.g. "SHRINKWRAP", "SOLIDIFY", "EDGE_SPLIT") with the artist's typical settings from
+    references/modifier-dictionary.md, then apply `overrides` (target=..., thickness=...)."""
+    m = ob.modifiers.new(name or mtype.replace("_", " ").title(), mtype)
+    typical = (get("modifier_defaults") or {}).get(mtype, {})
+    for k, v in typical.items():
+        if k in NAME_KEYS or k in overrides:
+            continue
+        try:
+            prop = m.bl_rna.properties.get(k)
+            if prop is None or prop.is_readonly:
+                continue
+            if prop.type == "ENUM" and prop.is_enum_flag and isinstance(v, list):
+                v = set(v)
+            setattr(m, k, v)
+        except Exception:
+            pass
+    for k, v in overrides.items():
+        setattr(m, k, v)
+    return m
+
+
 # ------------------------------------------------------------------ materials
+def recipe(name):
+    return (get("material_recipes") or {}).get(name)
+
+
+def build_material(name):
+    """A new material built from the artist's measured recipe for `name` (or a plain Principled if none)."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    p = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+    rec = recipe(name) or {}
+    if p is None:
+        return m
+    if rec.get("base_color"):
+        p.inputs["Base Color"].default_value = (*rec["base_color"][:3], 1.0)
+    for key, inp in (("metallic", "Metallic"), ("roughness", "Roughness"), ("alpha", "Alpha"), ("ior", "IOR"),
+                     ("transmission", "Transmission Weight"), ("emission_strength", "Emission Strength")):
+        if key in rec and p.inputs.get(inp) is not None:
+            p.inputs[inp].default_value = rec[key]
+    if rec.get("emission_color") and p.inputs.get("Emission Color") is not None:
+        p.inputs["Emission Color"].default_value = (*rec["emission_color"][:3], 1.0)
+    proc = rec.get("procedural") or {}
+    if "Roughness" in proc and "Noise" in proc["Roughness"]:
+        tc, noise, ramp = nt.nodes.new("ShaderNodeTexCoord"), nt.nodes.new("ShaderNodeTexNoise"), nt.nodes.new("ShaderNodeValToRGB")
+        noise.inputs["Scale"].default_value = 20.0
+        r0 = float(rec.get("roughness", 0.45))
+        ramp.color_ramp.elements[0].color = (max(0.0, r0 - 0.12),) * 3 + (1.0,)
+        ramp.color_ramp.elements[1].color = (min(1.0, r0 + 0.12),) * 3 + (1.0,)
+        nt.links.new(tc.outputs["Object"], noise.inputs["Vector"])
+        nt.links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+        nt.links.new(ramp.outputs["Color"], p.inputs["Roughness"])
+    if "Normal" in proc and "Bevel" in proc["Normal"]:
+        bev = nt.nodes.new("ShaderNodeBevel")
+        bev.inputs["Radius"].default_value = 0.002
+        nt.links.new(bev.outputs["Normal"], p.inputs["Normal"])
+    return m
+
+
 def material(ob, name=None):
-    """Assign a material by name (default: the first in the style's palette), reusing an existing one."""
-    name = name or (get("material_palette") or ["Material"])[0]
-    m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+    """Assign a material by name (default: the first in the style's palette). A new material is built from the
+    artist's measured recipe for that name, so values and procedural break-up match their own materials."""
+    name = name or (get("material_palette") or list((get("material_recipes") or {}).keys()) or ["Material"])[0]
+    m = bpy.data.materials.get(name) or build_material(name)
     if ob.data.materials:
         ob.data.materials[0] = m
     else:
         ob.data.materials.append(m)
     return m
+
+
+# ------------------------------------------------------------------ review renders
+def setup_render(scene=None):
+    """Render engine, colour management and world the way the artist reviews models."""
+    scene = scene or bpy.context.scene
+    for attr, key in (("engine", "render_engine"),):
+        v = get(key)
+        if v:
+            try:
+                setattr(scene.render, attr, v)
+            except TypeError:
+                pass
+    for attr, key in (("view_transform", "view_transform"), ("look", "look"), ("exposure", "exposure")):
+        v = get(key)
+        if v is not None:
+            try:
+                setattr(scene.view_settings, attr, v)
+            except TypeError:
+                pass
+    w = scene.world or bpy.data.worlds.new("Review")
+    scene.world = w
+    w.use_nodes = True
+    bg = next((n for n in w.node_tree.nodes if n.type == "BACKGROUND"), None)
+    if bg is not None:
+        bg.inputs["Strength"].default_value = float(get("world_strength", 1.0))
+        if get("world_kind", "sky") in ("sky", "hdri") and not any(n.type == "TEX_SKY" for n in w.node_tree.nodes):
+            sky = w.node_tree.nodes.new("ShaderNodeTexSky")
+            w.node_tree.links.new(sky.outputs["Color"], bg.inputs["Color"])
+    return scene
 
 
 def palette():

@@ -122,9 +122,9 @@ A skill folder, installed to `~/.claude/skills/<name>/`:
 |---|---|
 | `SKILL.md` | The skill Claude reads. It opens with **How this project is built**, a numbered summary in the order the work happens, then how to work, a style card of every number, and one section per technique marked *measured* or *generic*. |
 | `style.json` | Every style number, and where it came from: measured from N files, your answer, or the generic default. |
-| `scripts/style.py` | Applies your style inside Blender: `style.setup_scene()`, `style.name("radio knob")`, `style.box(...)`, `style.bevel(obj)`, `style.finish(obj)`, `style.subd(obj)`, `style.cutter(target, cutter)`, `style.order_stack(obj)`, `style.material(obj)`, `style.kit_piece("screw_m3")`, `style.texel_density(obj)`. |
+| `scripts/style.py` | Applies your style inside Blender: `style.setup_scene()`, `style.name("radio knob")`, `style.box(...)`, `style.bevel(obj)`, `style.finish(obj)`, `style.subd(obj)`, `style.cutter(target, cutter)`, `style.order_stack(obj)`, `style.modifier(obj, "SHRINKWRAP", target=body)` (any modifier, with your typical settings), `style.material(obj, "SteelDark")` (rebuilds your measured material), `style.setup_render()` (your review engine, colour and world), `style.kit_piece("screw_m3")`, `style.texel_density(obj)`. |
 | `scripts/style_check.py` | Checks any `.blend` against your style and lists what's off, ending in `STYLE ok` or a count of warnings. Claude runs it before calling a model done. |
-| `references/` | The full method for each technique, with your measurements on top, plus your kit catalogue. |
+| `references/` | The full method for each technique, with your measurements on top, plus your kit catalogue, your **modifier dictionary** and your **shader recipes**. |
 | `examples/`, `kit/` | Your files, build scripts and helper kit, only if you chose to include them. |
 
 Here's what the start of a built `SKILL.md` looks like (from the demo project):
@@ -180,12 +180,15 @@ The details are in **[docs/how-it-works.md](docs/how-it-works.md)**.
 | Bevels and shading | have live bevels or bevel weights | bevel tiers, segments, limit method, profile, harden normals, clamp, weighted normals, smoothing |
 | SubD topology | have live Subdivision Surface | levels, creases, quad share, support-loop tightness, poles |
 | Booleans and cutters | have live Boolean modifiers | solver, operand type, cutter display, naming, collection, parenting, position in the stack |
-| Modifier stacks | have live modifier stacks | the project-wide stack order, mirror, array, solidify, skin and curve habits |
+| Modifier stacks | have live modifier stacks | the project-wide stack order, and a **modifier dictionary**: every modifier type in your files (Shrinkwrap, Edge Split, Solidify, anything), how often you use it, and every setting you change from Blender's defaults |
+| Geometry Nodes | use Geometry Nodes modifiers | your node groups, what they're for (cables from curves, instancing, scattering, procedural meshes), the nodes inside and the input values you set |
 | Kit library and inserts | are kit libraries (asset-marked or stored pieces) or place many inserts | a catalogue of pieces and sizes, high/low insert pairs, how inserts are placed |
-| Materials and slots | assign 2 or more materials | your palette, the shared library across assets, slots per part, procedural or image shaders |
+| Materials and slots | assign 2 or more materials | your palette, the shared library across assets, slots per part |
+| Shaders and node setups | have node-built materials | your shader model, procedural or image texturing, the node chains you reuse for each input (for example Noise > Map Range into Roughness, Math into Bump), image sizes and colour spaces, AO/Bump/Normal Map/shader-Bevel tricks, shared shader groups, and **shader recipes** (Principled values per material name) |
 | UVs and texel density | hold unwrapped export meshes | texel density (and its range), island density spread, packing, seams, UV channels, UDIMs |
 | Game-ready and export | are high/low/game/LOD files or pairs | high/low naming, triangle ratio, LOD count, material slots on the game mesh, triangulation |
 | Vehicles | have at least 3 wheel or tyre parts | overall proportions, wheel size relative to length |
+| Lighting, world and render | have lights, cameras or a node world | render engine and samples, colour management (view transform, look, exposure), world (HDRI, sky or flat colour) and strength, your light rig and powers, camera lenses |
 
 ## Command line
 
