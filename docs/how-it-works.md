@@ -10,7 +10,8 @@ This document follows a project from folder to installed skill, and covers what 
 - [6. Building the skill](#6-building-the-skill)
 - [7. Style checks](#7-style-checks)
 - [8. The app](#8-the-app)
-- [9. Workspace layout](#9-workspace-layout)
+- [9. Other AI tools](#9-other-ai-tools)
+- [10. Workspace layout](#10-workspace-layout)
 
 ## 1. Finding files
 
@@ -45,6 +46,11 @@ An analysis document contains:
 | `objects[].modifiers[]` | every modifier, any type: the curated fields plus **every** setting it has (`settings`), names of linked objects (Shrinkwrap targets, cutters, mirror objects), and for Geometry Nodes the group and the values set on its exposed inputs (works with both the Blender 4 and Blender 5 input APIs) |
 | `modifier_rna_defaults` | Blender's own default for every setting of each modifier type in the file, so SkillBlend can tell your choices from untouched settings |
 | `objects[].empty` | display type, size and child count: pivot and socket empties |
+| `objects[].armature` | bone count, deform bones, naming convention (Unreal, Mixamo, Rigify, Unity, `.L/.R`), chain depth, height, rest pose (upper-arm angle: about 0 deg is a T-pose, about 45 deg an A-pose), bone constraints, and parts parented to single bones |
+| `objects[].mesh.skin` | on skinned meshes: influences per vertex (histogram and maximum), unweighted and unnormalised vertices, Preserve Volume |
+| `objects[].mesh.closed_loops`, `.symmetry` | on bodies, heads and other organic meshes: closed edge loops through regular vertices (the rings round neck, limbs, eyes and mouth) as a histogram of loop lengths, and the share of vertices with a mirror partner across X |
+| `objects[].mesh.sculpt` | Multires levels, face sets, masks, a changed voxel-remesh size, edge length as a share of the object's size, and the kind of sculpt (Multires, dynamic topology, voxel) |
+| `clearance` | for garments over a skinned body: the signed distance of each garment's vertices to the body surface (10th percentile, median, 90th percentile, share inside) |
 | `objects[].light`, `.camera` | light type, power, colour, size; camera type, lens, sensor, clipping, depth of field |
 | extras per object | constraints, animation and drivers, colour attributes, shape keys, particle systems |
 | `materials[]` | for every material: viewport values, render method, backface culling, displacement method, and the **whole node tree**: each node's type and settings (texture scales, Color Ramp stops, image size and colour space, projection), unlinked input values, every link (`TEX_NOISE.Fac>VALTORGB.Fac`), node groups followed inside, what feeds the material output, the Principled BSDF values, and for each Principled input that's driven by nodes, the chain that drives it |
@@ -118,6 +124,8 @@ Some measurements are more than a median:
 - **Vehicles.** A file counts as a vehicle only with at least three tyre- or wheel-named parts. A ship's `wheel_post` doesn't count.
 - **Modifier dictionary.** For every modifier type in the project, every setting's typical value (median for numbers, most common for the rest) is compared with Blender's own default. The skill lists what you change, with how many instances agree (`references/modifier-dictionary.md`), and `style.modifier(obj, TYPE)` adds any modifier with those settings.
 - **Shader recipes.** Materials are grouped by name across files: median base colour, metallic, roughness, emission, IOR and transmission, plus the node chain that drives each input. `style.material(obj, name)` rebuilds the material from its recipe, including a noise roughness break-up or a shader bevel when you use them.
+- **Characters.** Height from the skeleton, heads tall from the head mesh, rest pose from the upper-arm angle, skeleton naming by matching bone names, the worst weight counts across skinned meshes, closed loop lengths, symmetry, garment clearance, and face shape keys checked against the ARKit names.
+- **Sculpting.** A mesh counts as a dynamic-topology sculpt when it has 100k+ vertices and mostly triangles or very uneven valence; a dense all-quad mesh without Subdivision counts as a voxel-remeshed or applied-Multires sculpt. Detail size is the median edge as a share of the object's size, and a sculpt counts as handed over when a clean quad mesh with the same base name exists (`head_sculpt` / `head`).
 - **Shading methods.** Counts of every texture node, the most common chain into each Principled input, image sizes and colour spaces, texture-coordinate outputs, and helpers such as Bump, Normal Map, Ambient Occlusion, Geometry, Color Ramp, Mapping and Attribute nodes.
 
 ## 6. Building the skill
@@ -172,7 +180,16 @@ This analyses the open file exactly as in step 2, then runs every `checks/*.py` 
 | `POST /api/build` | build the skill |
 | `POST /api/install` | install the skill |
 
-## 9. Workspace layout
+## 9. Other AI tools
+
+`forge/targets.py` turns a built skill into instructions other assistants read:
+
+- **Project tools** (Codex and other `AGENTS.md` tools, Cursor, Gemini CLI, Copilot, Windsurf). The skill's files are copied to `<project>/.skillblend/<name>/`. The skill text, with a header saying where those files are, goes into the tool's instruction file. Shared files (`AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`) get a block between `<!-- skillblend:<name>:start -->` and `<!-- skillblend:<name>:end -->`, which is replaced on reinstall. Cursor and Windsurf get their own rule files.
+- **Any chat model.** `system-prompt.md` is a compact, self-contained version (about 16k characters, so it fits small local models). It holds the overview, how to work, the style card, each measured part's rules, and a few standard rules where nothing was measured.
+
+Every build writes all of these formats to the skill's `exports/` folder.
+
+## 10. Workspace layout
 
 `workspace/` sits next to `skillblend.py` (set `FORGE_WORKSPACE` to move it) and is ignored by git:
 

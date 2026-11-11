@@ -1,0 +1,26 @@
+{
+  "id": "sculpting",
+  "order": 11,
+  "title": "Sculpting",
+  "optional": true,
+  "summary": "How you sculpt: Multires on a quad base or dynamic topology / voxel remesh, how fine the detail goes, face sets and masks, and how the sculpt hands over to a clean game mesh.",
+  "request": {
+    "brief": "Submit a sculpt as you keep it: the sculpt object (with its Multires levels, if you use them) and, if you have it, the clean mesh you retopologised from it.",
+    "must_include": [
+      "The sculpt object",
+      "Your retopo or base mesh, if you have one"
+    ],
+    "submit": "One .blend file.",
+    "ideas": [
+      "a head sculpt",
+      "a creature bust",
+      "a sculpted prop with a game mesh"
+    ]
+  },
+  "questions": [
+    {
+      "key": "sculpt_notes",
+      "ask": "Do you sculpt in Blender, ZBrush or something else, and how do you get to the game mesh?"
+    }
+  ]
+}

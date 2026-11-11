@@ -7,7 +7,7 @@
 - Keep scripts clean: no scratch branches (`if False else ...`), no dead code; re-read a block before running it.
 <!-- more -->
 ### Why scripts
-A scripted model is reproducible and reviewable: every change is a diff, the model rebuilds in seconds, and proportions live as named numbers instead of being buried in vertex positions. It also lets Claude work the way the artist does: by editing the build, not by poking a saved file.
+A scripted model is reproducible and reviewable: every change is a diff, the model rebuilds in seconds, and proportions live as named numbers instead of being buried in vertex positions. It also lets an AI assistant work the way the artist does: by editing the build, not by poking a saved file.
 
 ### A good script layout
 1. Docstring with the brief and the facts above.

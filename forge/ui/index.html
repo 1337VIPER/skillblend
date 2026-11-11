@@ -109,6 +109,9 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:6
 .check b{display:block;font-size:14.5px} .check span{color:var(--muted);font-size:13.5px}
 .done-box{border-radius:16px;padding:20px;margin-top:18px;background:var(--ok-soft);border:1px solid transparent}
 .done-box h3{color:var(--ok);font-size:17px;margin-bottom:6px}
+.targets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:8px}
+.tgt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--panel)}
+.tgt input{margin-top:3px;accent-color:var(--accent)} .tgt b{display:block;font-size:14px;color:var(--ink)} .tgt span{font-size:12.5px;color:var(--muted)}
 .try{margin-top:16px;display:flex;flex-direction:column;gap:8px}
 .prompt{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px}
 .prompt q{flex:1;quotes:none;font-family:ui-monospace,Consolas,monospace;font-size:13px}
@@ -142,7 +145,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:6
   <path d="M28 48 L60 66 L92 48" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
   <!-- spark: the learned skill -->
   <path d="M100 14 C101.6 22.4 103.6 24.4 112 26 C103.6 27.6 101.6 29.6 100 38 C98.4 29.6 96.4 27.6 88 26 C96.4 24.4 98.4 22.4 100 14 Z" fill="#fff"/>
-</svg><div><b>SkillBlend</b><span>Teach Claude to model the way you do</span></div></div>
+</svg><div><b>SkillBlend</b><span>Teach your AI to model the way you do</span></div></div>
   <div class="grow"></div>
   <span id="blenderPill" class="pill"><span class="dot"></span>Looking for Blender…</span>
 </div></div>
@@ -151,7 +154,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:6
   <div class="stepper">
     <button class="st on" data-s="1"><i>1</i><div><b>Show it your work</b><span>Pick your project folder</span></div></button>
     <button class="st" data-s="2"><i>2</i><div><b>See how you model</b><span>Check what it learned</span></div></button>
-    <button class="st" data-s="3"><i>3</i><div><b>Make your skill</b><span>Install it for Claude</span></div></button>
+    <button class="st" data-s="3"><i>3</i><div><b>Make your skill</b><span>Install it for your AI</span></div></button>
   </div>
 
   <!-- 1 -->
@@ -164,7 +167,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:6
 
     <div class="panel hero">
       <h1>Show SkillBlend your work</h1>
-      <p>Pick the folder where your Blender models live. SkillBlend looks through every file and learns how you build: your bevels, modifier stacks, SubD, booleans, kitbash pieces, materials, UVs and game-ready setup. Then it turns that into a skill, so Claude models the same way you do.</p>
+      <p>Pick the folder where your Blender models live. SkillBlend looks through every file and learns how you build: your bevels, modifier stacks, SubD, booleans, kitbash pieces, materials, UVs and game-ready setup. Then it turns that into a skill, so your AI assistant models the same way you do.</p>
       <div class="tips">
         <div class="tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg><div>Your files are <b>only read</b>. They're never changed, saved or uploaded.</div></div>
         <div class="tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v10H3z"/></svg><div>Keep your kitbash or insert library somewhere else? <b>Add that folder too.</b></div></div>
@@ -199,7 +202,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:6
   <section id="s2">
     <div class="panel hero">
       <h1>Here's how you model</h1>
-      <p>Each card is one part of your workflow, written the way your skill will tell Claude to work.</p>
+      <p>Each card is one part of your workflow, written the way your skill will tell your AI assistant to work.</p>
       <div class="legend" style="margin-top:12px">
         <span><span class="badge m">✓ 3 files</span> learned from your own models</span>
         <span><span class="badge g">Standard</span> not in your files yet, so the skill uses SkillBlend's built-in method</span>
@@ -213,14 +216,14 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px;font-weight:6
   <section id="s3">
     <div class="panel hero">
       <h1>Make your skill</h1>
-      <p>This packs everything SkillBlend learned into a skill for Claude Code. Once it's installed, ask Claude to model something and it will follow your workflow: your bevel sizes, modifier order, naming and materials. It also checks its own work against your style before showing you.</p>
+      <p>This packs everything SkillBlend learned into a skill your AI assistant can use: Claude Code, OpenAI Codex, Cursor, Gemini CLI, GitHub Copilot, Windsurf, or any chat model (including local ones) through a ready-made system prompt. Once it's installed, ask your assistant to model something and it will follow your workflow: your bevel sizes, modifier order, topology, materials and characters. It also checks its own work against your style before showing you.</p>
     </div>
     <div class="panel">
       <div class="row">
         <label class="field">Skill name<input type="text" id="skillName" placeholder="my-modelling-style"></label>
         <label class="field"><span>Credit <span class="muted" style="font-weight:400">(optional)</span></span><input type="text" id="author" placeholder="Your name, studio or handle"></label>
       </div>
-      <label class="check"><input type="checkbox" id="examples"><div><b>Put my .blend files inside the skill</b><span>Claude can open them to see exactly how you built things. It makes the skill bigger, so leave it off if you plan to share the skill.</span></div></label>
+      <label class="check"><input type="checkbox" id="examples"><div><b>Put my .blend files inside the skill</b><span>Your AI can open them to see exactly how you built things. It makes the skill bigger, so leave it off if you plan to share the skill.</span></div></label>
       <label class="check hidden" id="kitWrap"><input type="checkbox" id="kitOk"><div><b>My kitbash pieces are mine to share</b><span>Tick this only if you made them. For bought kits, leave it off: the skill lists the pieces by name and size instead of copying them.</span></div></label>
       <div class="row" style="margin-top:6px"><button class="primary big" id="buildBtn">Make my skill</button><span class="muted small" id="buildHint"></span></div>
       <div id="buildOut"></div>
@@ -246,6 +249,7 @@ const NICE = {BEVEL:"Bevel", SUBSURF:"Subdivision", WEIGHTED_NORMAL:"Weighted No
   ARRAY:"Array", BOOLEAN:"Boolean", SMOOTH_BY_ANGLE:"Smooth by Angle", NODES:"Geometry Nodes", SKIN:"Skin", SCREW:"Screw",
   TRIANGULATE:"Triangulate", WELD:"Weld", CURVE:"Curve", DISPLACE:"Displace", SHRINKWRAP:"Shrinkwrap", DECIMATE:"Decimate",
   EDGE_SPLIT:"Edge Split", SIMPLE_DEFORM:"Simple Deform", WIREFRAME:"Wireframe", LATTICE:"Lattice", DATA_TRANSFER:"Data Transfer",
+  ARMATURE:"Armature", MULTIRES:"Multires", REMESH:"Remesh", CORRECTIVE_SMOOTH:"Corrective Smooth", SURFACE_DEFORM:"Surface Deform", MESH_DEFORM:"Mesh Deform", HOOK:"Hook", MASK:"Mask", CLOTH:"Cloth",
   EXACT:"Exact", FAST:"Fast", FLOAT:"Float", DIFFERENCE:"Difference", UNION:"Union", INTERSECT:"Intersect", WIRE:"wireframe",
   BOUNDS:"bounds", ANGLE:"angle", WEIGHT:"bevel weight", METRIC:"metric", COLLECTION:"collection", FIXED_COUNT:"fixed count",
   MITER_ARC:"arc", MITER_SHARP:"sharp", TEXTURED:"solid", DITHERED:"dithered", BLENDED:"blended", AGX:"AgX",
@@ -291,6 +295,12 @@ const FACTS = {
   "game-ready-export": [["high_low_tri_ratio","High vs game mesh", v => v + "× the triangles"], ["lod_count","LOD levels", v => v],
                       ["max_material_slots","Materials on game mesh", v => v], ["export_format","Export as", v => v]],
   "vehicles": [["car_wheel_diameter_of_length","Wheel size", v => pct(v) + " of length"]],
+  "characters-and-rigging": [["character_height_m","Height", v => v + " m"], ["heads_tall","Proportions", v => v + " heads tall"],
+                      ["rest_pose","Rest pose", v => v], ["skeleton_naming","Skeleton naming", v => ({unreal:"Unreal", mixamo:"Mixamo", rigify:"Rigify", unity:"Unity", "blender-sides":".L/.R sides", custom:"Custom"}[v] || v)],
+                      ["max_influences","Weights per vertex", v => "up to " + v], ["garment_clearance_mm","Garment clearance", v => v + " mm"],
+                      ["face_shape_keys","Face shape keys", v => v === "arkit" ? "ARKit names" : "Custom"]],
+  "sculpting": [["sculpt_method","Method", v => ({multires:"Multires", dyntopo:"Dynamic topology", "voxel-or-applied-multires":"Voxel remesh"}[v] || v)],
+                      ["multires_levels","Multires levels", v => v], ["sculpt_detail_pct","Detail size", v => v + "% of the object"], ["voxel_size_mm","Voxel size", v => v + " mm"]],
 };
 const ICONS = {
   "build-scripts": '<path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/>',
@@ -308,6 +318,8 @@ const ICONS = {
   "shaders-and-nodes": '<circle cx="12" cy="12" r="9"/><path d="M8.5 8.5a5 5 0 0 1 5-2"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 3" opacity=".4"/>',
   "geometry-nodes": '<rect x="2" y="4" width="7" height="6" rx="1.5"/><rect x="15" y="14" width="7" height="6" rx="1.5"/><rect x="15" y="4" width="7" height="6" rx="1.5"/><path d="M9 7h6M9 7c3 0 3 10 6 10"/>',
   "lookdev-and-render": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  "characters-and-rigging": '<circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M12 10l-5 3M12 10l5 3M12 15l-3 6M12 15l3 6"/>',
+  "sculpting": '<path d="M4 20c3-1 5-3 6-6l7-7a2.5 2.5 0 0 1 3.5 3.5l-7 7c-3 1-5 3-6 6"/><path d="M14 6l4 4"/>',
   "mesh-quality": '<path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/><circle cx="15" cy="9" r="2.2" fill="currentColor"/>',
   "vehicles": '<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M3 17V12l3-5h9l4 5h2v5"/>',
 };
@@ -532,22 +544,37 @@ async function build(generic){
 }
 $("buildBtn").onclick = () => build(false);
 
+const TARGETS = [["claude", "Claude Code", "skills folder, loads by itself"], ["codex", "Codex and AGENTS.md tools", "OpenAI Codex, Jules, Amp, OpenCode, Zed..."],
+  ["cursor", "Cursor", "a project rule"], ["gemini", "Gemini CLI", "GEMINI.md"], ["copilot", "GitHub Copilot", "copilot-instructions.md"], ["windsurf", "Windsurf", "a project rule"]];
+const chosen = () => [...document.querySelectorAll(".tgt input:checked")].map(x => x.value);
 const TRY = ["Model a sci-fi supply crate the way I do.", "Make a hard-surface flashlight prop, game-ready, in my style.", "Check this model against my style: <path to .blend>"];
 function showBuild(r){
   const mine = r.covered || [], std = r.generic || [];
   $("buildOut").innerHTML = `<div class="done-box"><h3>${r.personal ? "Your skill is ready" : "The standard skill is ready"}</h3>
     <div class="small">${r.personal ? `Learned from your files: <b>${mine.map(title).map(esc).join(", ") || "none"}</b>.${std.length ? `<br>Standard method for: ${std.map(title).map(esc).join(", ")}.` : ""}` : "Not tailored to you yet: learn your project to personalise it."}</div>
-    <div class="row" style="margin-top:14px"><button class="primary" id="instBtn">Install for Claude Code</button><span class="small muted" id="instOut">${r.installed_at ? "An earlier version is installed; installing replaces it." : ""}</span></div>
+    <div style="margin-top:16px"><b>Install it for</b></div>
+    <div class="targets">
+      ${TARGETS.map(([id, label, sub]) => `<label class="tgt"><input type="checkbox" value="${id}" ${id === "claude" ? "checked" : ""}><div><b>${label}</b><span>${sub}</span></div></label>`).join("")}
+    </div>
+    <div id="projRow" class="row hidden" style="margin-top:8px"><input type="text" id="projDir" placeholder="The project folder your AI tool works in, e.g. D:\\Art\\MyGame" style="flex:1"></div>
+    <div class="row" style="margin-top:12px"><button class="primary" id="instBtn">Install</button><button id="promptBtn">Copy a system prompt for any chat model</button><span class="small muted" id="instOut">${r.installed_at ? "An earlier version is installed in Claude Code; installing replaces it." : ""}</span></div>
     <div id="tryBox" class="${r.installed_at ? "" : "hidden"}"></div>
     <details style="margin-top:12px"><summary>Where the files are</summary><div class="mono small muted">${esc(r.dir)}</div></details></div>`;
+  const sync = () => $("projRow").classList.toggle("hidden", !chosen().some(t => t !== "claude"));
+  $("buildOut").querySelectorAll(".tgt input").forEach(cb => cb.onchange = sync);
   $("instBtn").onclick = () => install(false);
+  $("promptBtn").onclick = async () => {
+    try { const j = await api("/api/prompt", {}); await navigator.clipboard.writeText(j.text);
+          $("instOut").textContent = `System prompt copied (${Math.round(j.text.length / 1000)}k characters). Paste it into ChatGPT, Ollama, LM Studio or any chat model as its system prompt or custom instructions.`; }
+    catch (e) { $("instOut").textContent = e.message; }
+  };
   if (r.installed_at) showTry(r.name);
 }
 function showTry(name){
   $("tryBox").classList.remove("hidden");
-  $("tryBox").innerHTML = `<div class="try"><b>Try it.</b> Start a new Claude Code session and ask:
+  $("tryBox").innerHTML = `<div class="try"><b>Try it.</b> Start a new session in your AI tool and ask:
     ${TRY.map((t, i) => `<div class="prompt"><q>${esc(t)}</q><button data-i="${i}">Copy</button></div>`).join("")}
-    <span class="small muted">Claude loads <span class="mono">${esc(name)}</span> by itself when you ask for Blender modelling.</span></div>`;
+    <span class="small muted">Claude Code loads <span class="mono">${esc(name)}</span> by itself; the other tools read the instruction files in your project.</span></div>`;
   $("tryBox").querySelectorAll("button[data-i]").forEach(b => b.onclick = async () => {
     try { await navigator.clipboard.writeText(TRY[+b.dataset.i]); b.textContent = "Copied"; } catch (e) { b.textContent = "Select and copy"; }
     setTimeout(() => b.textContent = "Copy", 1500);
@@ -555,12 +582,15 @@ function showTry(name){
 }
 async function install(replace){
   try {
-    const r = await api("/api/install", {replace});
+    const targets = chosen();
+    if (!targets.length) { $("instOut").textContent = "Pick at least one AI tool."; return; }
+    const r = await api("/api/install", {replace, targets, project_dir: ($("projDir").value || "").trim().replace(/^"|"$/g, "")});
     if (r.exists && !replace) {
       if (confirm(`A skill with this name is already installed:\n${r.path}\n\nReplace it with this new version?`)) return install(true);
       return;
     }
-    $("instOut").innerHTML = `Installed. Claude Code will pick it up in a new session.`;
+    const where = Object.entries(r.done || {}).map(([t, p]) => `${(TARGETS.find(x => x[0] === t) || [t, t])[1]}: <span class="mono">${esc(p)}</span>`).join("<br>");
+    $("instOut").innerHTML = `Installed.<br>${where}`;
     showTry(S.last_build.name);
   } catch (e) { $("instOut").textContent = e.message; }
 }

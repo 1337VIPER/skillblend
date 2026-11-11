@@ -370,4 +370,118 @@ try:
 except TypeError:
     pass
 save("lookdev_lamp_post.blend")
+
+# 11. character: an Unreal-named skeleton in A-pose, a skinned body form, a shirt wrapped over it,
+#     a quad head with Multires and face shape keys, and a dense voxel-remeshed head sculpt with face sets
+reset()
+from mathutils import Vector
+cc = coll("character")
+arm_d = bpy.data.armatures.new("SK_Demo")
+rig = bpy.data.objects.new("SK_Demo_rig", arm_d)
+cc.objects.link(rig)
+bpy.context.view_layer.objects.active = rig
+for o in bpy.context.scene.objects:
+    o.select_set(o == rig)
+bpy.ops.object.mode_set(mode="EDIT")
+A = math.radians(45)
+spec = [("pelvis", None, (0, 0, 0.95), (0, 0, 1.05)), ("spine_01", "pelvis", (0, 0, 1.05), (0, 0, 1.2)),
+        ("spine_02", "spine_01", (0, 0, 1.2), (0, 0, 1.38)), ("neck_01", "spine_02", (0, 0, 1.45), (0, 0, 1.55)),
+        ("head", "neck_01", (0, 0, 1.55), (0, 0, 1.8))]
+for side, sx in (("l", 1), ("r", -1)):
+    sh = (sx * 0.18, 0, 1.42)
+    el = (sh[0] + sx * 0.28 * math.cos(A), 0, sh[2] - 0.28 * math.sin(A))
+    wr = (el[0] + sx * 0.25 * math.cos(A), 0, el[2] - 0.25 * math.sin(A))
+    spec += [(f"clavicle_{side}", "spine_02", (sx * 0.03, 0, 1.4), sh), (f"upperarm_{side}", f"clavicle_{side}", sh, el),
+             (f"lowerarm_{side}", f"upperarm_{side}", el, wr), (f"thigh_{side}", "pelvis", (sx * 0.1, 0, 0.95), (sx * 0.1, 0, 0.5)),
+             (f"calf_{side}", f"thigh_{side}", (sx * 0.1, 0, 0.5), (sx * 0.1, 0, 0.08))]
+for name, parent, h, t in spec:
+    eb = arm_d.edit_bones.new(name)
+    eb.head, eb.tail = Vector(h), Vector(t)
+    if parent:
+        eb.parent = arm_d.edit_bones[parent]
+bpy.ops.object.mode_set(mode="OBJECT")
+# a simple symmetric body form: a scaled UV sphere column, weighted to the nearest two bones
+me = bpy.data.meshes.new("body_form")
+bm = bmesh.new()
+bmesh.ops.create_uvsphere(bm, u_segments=24, v_segments=32, radius=0.5)
+for v in bm.verts:
+    v.co.x *= 0.36
+    v.co.y *= 0.22
+    v.co.z = v.co.z * 1.8 + 0.92
+bm.to_mesh(me)
+bm.free()
+body = bpy.data.objects.new("body_form", me)
+cc.objects.link(body)
+body.parent = rig
+am = body.modifiers.new("Armature", "ARMATURE")
+am.object = rig
+segs = {b.name: (rig.matrix_world @ b.head_local, rig.matrix_world @ b.tail_local) for b in arm_d.bones}
+for b in segs:
+    body.vertex_groups.new(name=b)
+
+
+def seg_dist(p, a, b):
+    ab = b - a
+    t = max(0.0, min(1.0, (p - a).dot(ab) / max(ab.length_squared, 1e-9)))
+    return (a + ab * t - p).length
+
+
+for v in me.vertices:
+    ds = sorted((seg_dist(v.co, a, b), n) for n, (a, b) in segs.items())[:2]
+    w0, w1 = 1 / (ds[0][0] + 1e-3), 1 / (ds[1][0] + 1e-3)
+    body.vertex_groups[ds[0][1]].add([v.index], w0 / (w0 + w1), "REPLACE")
+    body.vertex_groups[ds[1][1]].add([v.index], w1 / (w0 + w1), "REPLACE")
+smooth(body, 180)
+# a shirt wrapped over the torso: Shrinkwrap at 8 mm, Solidify 3 mm
+me = bpy.data.meshes.new("shirt")
+bm = bmesh.new()
+bmesh.ops.create_cone(bm, cap_ends=False, segments=24, radius1=0.42, radius2=0.42, depth=0.5)
+bm.to_mesh(me)
+bm.free()
+shirt = bpy.data.objects.new("shirt", me)
+cc.objects.link(shirt)
+shirt.location = (0, 0, 1.2)
+sw = shirt.modifiers.new("Shrinkwrap", "SHRINKWRAP")
+sw.target = body
+sw.wrap_mode = "OUTSIDE_SURFACE"
+sw.offset = 0.008
+so = shirt.modifiers.new("Solidify", "SOLIDIFY")
+so.thickness = 0.003
+shirt.modifiers.new("Subdivision", "SUBSURF").levels = 1
+# quad head with Multires and ARKit-style shape keys
+me = bpy.data.meshes.new("head")
+bm = bmesh.new()
+bmesh.ops.create_cube(bm, size=0.22)
+bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=3, use_grid_fill=True)
+for v in bm.verts:
+    v.co = v.co.normalized() * 0.11
+bm.to_mesh(me)
+bm.free()
+head = bpy.data.objects.new("head", me)
+cc.objects.link(head)
+head.location = (0, 0, 1.68)
+mr = head.modifiers.new("Multires", "MULTIRES")
+for _ in range(2):
+    try:
+        with bpy.context.temp_override(object=head, active_object=head):
+            bpy.ops.object.multires_subdivide(modifier="Multires", mode="CATMULL_CLARK")
+    except Exception:
+        pass
+head.shape_key_add(name="Basis")
+for k in ("jawOpen", "eyeBlinkLeft", "eyeBlinkRight", "mouthSmileLeft"):
+    head.shape_key_add(name=k)
+# the sculpt stage: a dense voxel-remeshed head with face sets, kept as its own object
+me = bpy.data.meshes.new("head_sculpt")
+bm = bmesh.new()
+bmesh.ops.create_icosphere(bm, subdivisions=8, radius=0.11)
+bm.to_mesh(me)
+bm.free()
+me.remesh_voxel_size = 0.002
+fs = me.attributes.new(".sculpt_face_set", "INT", "FACE")
+for i, d in enumerate(fs.data):
+    d.value = 1 + (i % 3)
+sculpt = bpy.data.objects.new("head_sculpt", me)
+cc.objects.link(sculpt)
+sculpt.location = (0.4, 0, 1.68)
+save("character_demo.blend")
 print("FIXTURES_OK")

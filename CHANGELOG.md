@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0 (2026-11-11)
+
+Characters, sculpting, and skills for any AI.
+
+- **Characters and rigging** (new): height and heads tall, A- or T-pose, skeleton naming (Unreal, Mixamo, Rigify, Unity) and size, bone constraints, weights (influences per vertex, unweighted and unnormalised vertices), closed edge loops round neck, limbs, eyes and mouth, symmetry, garment clearance over the body, gear on bones, face shape keys (ARKit names) and animation actions. `style_check.py` flags too many weights, unweighted vertices, garments inside the body, and a different skeleton naming or rest pose.
+- **Sculpting** (new): your sculpt method (Multires, dynamic topology, voxel remesh), Multires levels, how fine the detail goes, voxel size, face sets and masks, symmetry, and whether a clean game mesh sits next to the sculpt.
+- **Any AI, not just Claude.**
+  - `install --for codex,cursor,gemini,copilot,windsurf --project-dir <project>` writes instruction files for OpenAI Codex (and every `AGENTS.md` tool), Cursor, Gemini CLI, GitHub Copilot and Windsurf, merged safely into existing files.
+  - `exports/system-prompt.md` is a compact prompt for any chat model, local ones included.
+  - The app's last step lets you pick the tools and copy the system prompt.
+- `INSTALL_WITH_AI.md` (was `INSTALL_WITH_CLAUDE.md`) works with any coding assistant, and a repo-level `AGENTS.md` tells any assistant how to run SkillBlend.
+- The demo project gains a rigged, skinned character with a garment, a Multires head with face shape keys, and a dense voxel-remeshed sculpt.
+
 ## 0.3.0 (2026-11-08)
 
 Mesh quality: SkillBlend now measures how clean your topology is and how your SubD holds and shades.

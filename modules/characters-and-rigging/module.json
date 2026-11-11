@@ -1,0 +1,49 @@
+{
+  "id": "characters-and-rigging",
+  "order": 11,
+  "title": "Characters and rigging",
+  "optional": true,
+  "summary": "How you build and rig characters: height and proportions, A- or T-pose, skeleton naming and size, how weights are painted, edge loops round the body and face, garments over the body, rigid gear on bones and face shape keys.",
+  "request": {
+    "brief": "Submit a character you built, rigged and skinned the way you deliver it: body, clothes and gear, with its armature.",
+    "must_include": [
+      "The armature and the skinned meshes",
+      "Garments as separate meshes, if you model them that way",
+      "Face shape keys, if you make them"
+    ],
+    "submit": "One .blend file.",
+    "ideas": [
+      "a game character in A-pose",
+      "a soldier with gear",
+      "a stylised hero"
+    ]
+  },
+  "questions": [
+    {
+      "key": "engine_skeleton",
+      "ask": "Which skeleton do you rig to?",
+      "options": [
+        {
+          "label": "Unreal mannequin",
+          "value": "unreal"
+        },
+        {
+          "label": "Unity Humanoid",
+          "value": "unity"
+        },
+        {
+          "label": "Mixamo",
+          "value": "mixamo"
+        },
+        {
+          "label": "Rigify",
+          "value": "rigify"
+        }
+      ]
+    },
+    {
+      "key": "character_notes",
+      "ask": "Anything about your character workflow the files can't show?"
+    }
+  ]
+}

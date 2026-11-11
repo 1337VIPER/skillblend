@@ -1,4 +1,4 @@
-"""Assemble a Claude Code skill from the modules, the artist's measurements and answers."""
+"""Assemble a skill (Claude Code SKILL.md plus exports for other AI tools) from the modules, measurements and answers."""
 import json
 import os
 import re
@@ -169,6 +169,8 @@ def build(ws, name=None, author=None, generic=False, exclude=(), include_example
                         covered, copied, module_scripts)
     with open(os.path.join(out, "SKILL.md"), "w", encoding="utf-8") as fh:
         fh.write(text)
+    from .targets import write_exports
+    write_exports(out)
     with open(os.path.join(out, "SOURCE.md"), "w", encoding="utf-8") as fh:
         fh.write(render_source(sname, personal, mods, analyses, results, answers))
     warnings = {k: r.warnings for k, r in results.items() if r.warnings}

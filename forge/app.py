@@ -109,17 +109,37 @@ class App:
         return res
 
     def install(self, body):
+        """Install for Claude Code (skills folder) and/or other AI tools (instruction files in a project)."""
+        from .targets import install_targets
         src = (self.last_build or {}).get("dir")
         if not src or not os.path.isfile(os.path.join(src, "SKILL.md")):
-            raise RuntimeError("Build the skill first.")
-        dst = os.path.join(os.path.expanduser("~"), ".claude", "skills", os.path.basename(src))
-        if os.path.exists(dst):
-            if not body.get("replace"):
-                return {"exists": True, "path": dst}
-            shutil.rmtree(dst)
-        shutil.copytree(src, dst)
-        self.last_build["installed_at"] = dst
-        return {"installed": True, "path": dst}
+            raise RuntimeError("Make the skill first.")
+        tools = body.get("targets") or ["claude"]
+        done = {}
+        if "claude" in tools:
+            dst = os.path.join(os.path.expanduser("~"), ".claude", "skills", os.path.basename(src))
+            if os.path.exists(dst):
+                if not body.get("replace"):
+                    return {"exists": True, "path": dst}
+                shutil.rmtree(dst)
+            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("exports"))
+            self.last_build["installed_at"] = dst
+            done["claude"] = dst
+        others = [t for t in tools if t != "claude"]
+        if others:
+            pd = body.get("project_dir") or None
+            if any(t != "prompt" for t in others):
+                if not pd or not os.path.isdir(pd):
+                    raise RuntimeError("Choose the project folder your AI tool works in.")
+            done.update(install_targets(src, others, pd))
+        return {"installed": True, "done": done}
+
+    def prompt(self):
+        from .targets import system_prompt
+        src = (self.last_build or {}).get("dir")
+        if not src:
+            raise RuntimeError("Make the skill first.")
+        return {"text": system_prompt(src)}
 
 
 def browse(path):
@@ -232,6 +252,8 @@ def make_handler(app):
                     return self._send(200, app.build(body))
                 if u.path == "/api/install":
                     return self._send(200, app.install(body))
+                if u.path == "/api/prompt":
+                    return self._send(200, app.prompt())
             except buildlib.NothingSubmitted as exc:
                 return self._send(409, {"error": str(exc), "nothing": True})
             except Exception as exc:

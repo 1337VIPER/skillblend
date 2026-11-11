@@ -15,7 +15,7 @@ import sys
 import os
 from collections import Counter
 
-VERSION = 4
+VERSION = 6
 
 
 def _r(x, n=6):
@@ -381,6 +381,247 @@ def pinch_stats(mesh, max_verts=300000):
     return out
 
 
+# ---------------------------------------------------------------- characters: skeletons, skinning, loops, symmetry
+NAMING_HINTS = (
+    ("unreal", ("pelvis", "spine_01", "upperarm_l", "thigh_l", "calf_l", "clavicle_l", "neck_01")),
+    ("mixamo", ("mixamorig:", "mixamorig_")),
+    ("rigify", ("DEF-", "ORG-", "MCH-")),
+    ("unity", ("Hips", "Spine", "LeftUpperArm", "LeftUpLeg", "LeftArm")),
+)
+UPPER_ARM = ("upperarm_l", "upper_arm.l", "upper_arm_l", "leftarm", "mixamorig:leftarm", "def-upper_arm.l",
+             "l_upperarm", "upperarm.l", "arm.l", "leftupperarm")
+
+
+def armature_info(obj):
+    arm = obj.data
+    bones = list(arm.bones)
+    names = [b.name for b in bones]
+    low = [n.lower() for n in names]
+    conv = "custom"
+    for label, keys in NAMING_HINTS:
+        hits = sum(1 for n in names for k in keys if (k.lower() in n.lower() if label in ("mixamo", "rigify") else n.lower() == k.lower()))
+        if hits >= 2:
+            conv = label
+            break
+    if conv == "custom" and sum(1 for n in names if n.endswith((".L", ".R", "_L", "_R", ".l", ".r", "_l", "_r"))) >= 4:
+        conv = "blender-sides"
+
+    def depth(b):
+        d = 0
+        while b.parent:
+            d += 1
+            b = b.parent
+        return d
+    mw = obj.matrix_world
+    zs = [(mw @ b.head_local).z for b in bones] + [(mw @ b.tail_local).z for b in bones]
+    d = {"bones": len(bones), "deform_bones": sum(1 for b in bones if b.use_deform),
+         "naming": conv, "max_depth": max((depth(b) for b in bones), default=0),
+         "height": _r(max(zs) - min(zs), 4) if zs else None, "names": names[:80],
+         "pose_position": arm.pose_position, "display": arm.display_type}
+    ua = next((b for b in bones if b.name.lower() in UPPER_ARM), None)
+    if ua is None:
+        ua = next((b for b in bones if ("upper" in b.name.lower() and "arm" in b.name.lower())
+                   and b.name.lower().endswith(("l", ".l", "_l", "left"))), None)
+    if ua is not None:
+        v = (mw @ ua.tail_local) - (mw @ ua.head_local)
+        if v.length > 1e-6:
+            d["arm_angle_deg"] = _r(math.degrees(math.asin(max(-1, min(1, -v.z / v.length)))), 2)  # 0 = T-pose, ~45 = A-pose
+    hb = next((b for b in bones if b.name.lower() in ("head", "mixamorig:head", "def-spine.006", "head.x", "c_head.x")), None)
+    if hb is not None:
+        d["head_base_z"] = _r((mw @ hb.head_local).z, 4)
+    cons = Counter()
+    if obj.pose:
+        for pb in obj.pose.bones:
+            for c in pb.constraints:
+                cons[c.type] += 1
+    d["constraints"] = dict(cons)
+    return d
+
+
+def skin_info(obj, max_verts=40000):
+    """Weights on a skinned mesh: influences per vertex, unweighted share, normalisation."""
+    arm_mod = next((m for m in obj.modifiers if m.type == "ARMATURE"), None)
+    if arm_mod is None or not obj.vertex_groups:
+        return None
+    me = obj.data
+    bones = set(b.name for b in arm_mod.object.data.bones) if arm_mod.object and arm_mod.object.type == "ARMATURE" else set()
+    deform_idx = {g.index for g in obj.vertex_groups if not bones or g.name in bones}
+    n = len(me.vertices)
+    step = max(1, n // max_verts)
+    infl, unweighted, unnorm, total = Counter(), 0, 0, 0
+    for i in range(0, n, step):
+        v = me.vertices[i]
+        ws = [g.weight for g in v.groups if g.group in deform_idx and g.weight > 1e-4]
+        total += 1
+        infl[min(len(ws), 8)] += 1
+        if not ws:
+            unweighted += 1
+        elif abs(sum(ws) - 1.0) > 0.02:
+            unnorm += 1
+    return {"armature": arm_mod.object.name if arm_mod.object else None,
+            "groups": len(obj.vertex_groups), "deform_groups": len(deform_idx),
+            "max_influences": max((k for k, c in infl.items() if c), default=0),
+            "over_4": _r(sum(c for k, c in infl.items() if k > 4) / total, 4) if total else 0,
+            "unweighted": _r(unweighted / total, 4) if total else 0,
+            "not_normalised": _r(unnorm / total, 4) if total else 0,
+            "influence_hist": {str(k): c for k, c in sorted(infl.items())},
+            "preserve_volume": arm_mod.use_deform_preserve_volume}
+
+
+def closed_loops(bm, max_faces=60000):
+    """Closed edge loops through regular (valence-4) vertices, as a histogram of loop lengths (the character
+    study's measure: rings round the neck, limbs, eyes and mouth)."""
+    if len(bm.faces) > max_faces or len(bm.faces) < 40:
+        return None
+    seen = set()
+    hist = Counter()
+
+    def nxt(e, v):
+        if len(v.link_edges) != 4 or any(x.is_boundary for x in v.link_edges):
+            return None
+        fs = set(e.link_faces)
+        for e2 in v.link_edges:
+            if e2 is not e and not (set(e2.link_faces) & fs):
+                return e2
+        return None
+    for e in bm.edges:
+        if e.index in seen:
+            continue
+        seen.add(e.index)
+        n, closed = 1, False
+        for start in (e.verts[0], e.verts[1]):
+            cur, v = e, start
+            while True:
+                nx = nxt(cur, v)
+                if nx is None:
+                    break
+                if nx.index in seen:
+                    closed = nx is e
+                    break
+                seen.add(nx.index)
+                n += 1
+                v = nx.other_vert(v)
+                cur = nx
+            if closed:
+                break
+        if closed:
+            hist[n] += 1
+    return {str(k): c for k, c in sorted(hist.items())}
+
+
+def symmetry_share(me, max_verts=60000, tol_ratio=0.002):
+    """Share of vertices with a mirror partner across X (local space)."""
+    from mathutils import kdtree
+    n = len(me.vertices)
+    if n < 20 or n > 400000:
+        return None
+    kd = kdtree.KDTree(n)
+    for v in me.vertices:
+        kd.insert(v.co, v.index)
+    kd.balance()
+    xs = [v.co.x for v in me.vertices]
+    size = max(max(xs) - min(xs), 1e-6)
+    tol = size * tol_ratio
+    step = max(1, n // max_verts)
+    hit = tot = 0
+    for i in range(0, n, step):
+        co = me.vertices[i].co
+        m = co.copy()
+        m.x = -m.x
+        _, _, dist = kd.find(m)
+        tot += 1
+        hit += 1 if dist is not None and dist <= tol else 0
+    return _r(hit / tot, 4) if tot else None
+
+
+def sculpt_info(obj, me, st):
+    """Signs of a sculpt workflow: Multires, dyntopo-style triangles with wild valence, voxel remesh, face sets, masks."""
+    d = {}
+    mr = next((m for m in obj.modifiers if m.type == "MULTIRES"), None)
+    if mr:
+        d["multires"] = {"levels": mr.levels, "sculpt_levels": mr.sculpt_levels, "render_levels": mr.render_levels,
+                         "total_levels": mr.total_levels}
+    names = {a.name for a in me.attributes}
+    if {".sculpt_face_set", "sculpt_face_set"} & names:
+        a = me.attributes.get(".sculpt_face_set") or me.attributes.get("sculpt_face_set")
+        try:
+            d["face_sets"] = len({x.value for x in a.data})
+        except Exception:
+            d["face_sets"] = True
+    if {".sculpt_mask", "sculpt_mask"} & names:
+        d["mask"] = True
+    vs = getattr(me, "remesh_voxel_size", None)
+    if vs and abs(vs - 0.1) > 1e-6:  # 0.1 is Blender's default: only a changed size says the artist voxel-remeshes
+        d["voxel_size"] = _r(vs, 6)
+    dims = max(obj.dimensions) if max(obj.dimensions) > 0 else 1.0
+    if st.get("edge_len_median"):
+        d["edge_pct_of_size"] = _r(st["edge_len_median"] / dims * 100, 4)
+    dense = st["verts"] >= 100000
+    trimesh = st["faces"] and st["tris"] / st["faces"] > 0.6
+    wild = st.get("valence_max", 0) >= 9
+    if dense and (trimesh or wild):
+        d["kind"] = "dyntopo"
+    elif dense and st["quad_ratio"] and st["quad_ratio"] > 0.9 and not any(m.type == "SUBSURF" for m in obj.modifiers):
+        d["kind"] = "voxel-or-applied-multires"
+    elif mr:
+        d["kind"] = "multires"
+    return d if d else None
+
+
+def clearance_pass(scene_objects):
+    """Garment clearance over a body: for each mesh that wraps a skinned body (Shrinkwrap target, or most of it within
+    5 cm of the body), the signed distance of its vertices to the body surface."""
+    from mathutils.bvhtree import BVHTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    meshes = [o for o in scene_objects if o.type == "MESH" and o.visible_get() is not False]
+    bodies = [o for o in meshes if any(m.type == "ARMATURE" for m in o.modifiers)
+              and any(k in o.name.lower() for k in ("body", "form", "base", "skin", "torso", "mannequin"))]
+    if not bodies:
+        skinned = [o for o in meshes if any(m.type == "ARMATURE" for m in o.modifiers)]
+        bodies = sorted(skinned, key=lambda o: -len(o.data.vertices))[:1]
+    out = {}
+    for body in bodies[:2]:
+        bm = bmesh.new()
+        bm.from_object(body, dg)
+        bm.transform(body.matrix_world)
+        if len(bm.verts) > 400000:
+            bm.free()
+            continue
+        bvh = BVHTree.FromBMesh(bm)
+        h = max(v.co.z for v in bm.verts) - min(v.co.z for v in bm.verts) if bm.verts else 1.0
+        for o in meshes:
+            if o is body or len(o.data.vertices) > 200000:
+                continue
+            wraps = any(m.type == "SHRINKWRAP" and m.target is body for m in o.modifiers)
+            nm = o.name.lower()
+            if not wraps and any(k in nm for k in ("head", "face", "eye", "teeth", "tongue", "hand", "foot", "body", "sculpt")):
+                continue  # body parts sit on the body; they aren't garments
+            g = bmesh.new()
+            g.from_object(o, dg)
+            g.transform(o.matrix_world)
+            step = max(1, len(g.verts) // 3000)
+            ds = []
+            for i, v in enumerate(g.verts):
+                if i % step:
+                    continue
+                hit = bvh.find_nearest(v.co)
+                if hit[0] is not None:
+                    p, n, _, dist = hit
+                    ds.append(dist if (v.co - p).dot(n) >= 0 else -dist)
+            g.free()
+            if not ds:
+                continue
+            near = sum(1 for x in ds if -0.01 <= x <= 0.05) / len(ds)
+            if not wraps and near < 0.6:
+                continue
+            ds.sort()
+            out[o.name] = {"body": body.name, "shrinkwrap": wraps, "p10": _r(ds[len(ds) // 10], 5),
+                           "median": _r(ds[len(ds) // 2], 5), "p90": _r(ds[len(ds) * 9 // 10], 5),
+                           "inside": _r(sum(1 for x in ds if x < -0.001) / len(ds), 4), "body_height": _r(h, 4)}
+        bm.free()
+    return out
+
+
 def mesh_stats(obj, depsgraph):
     me = obj.data
     st = {"verts": len(me.vertices), "edges": len(me.edges), "faces": len(me.polygons)}
@@ -414,16 +655,19 @@ def mesh_stats(obj, depsgraph):
     bm.faces.ensure_lookup_table()
     # poles on interior vertices of quad-dominant meshes
     p3 = p5 = 0
+    vmax = 0
     boundary = 0
     for v in bm.verts:
         if any(e.is_boundary for e in v.link_edges):
             boundary += 1
             continue
         n = len(v.link_edges)
+        vmax = max(vmax, n)
         if n == 3:
             p3 += 1
         elif n >= 5:
             p5 += 1
+    st["valence_max"] = vmax
     st["poles_3"] = p3
     st["poles_5plus"] = p5
     st["boundary_verts"] = boundary
@@ -437,12 +681,32 @@ def mesh_stats(obj, depsgraph):
         st["edge_len_p10"] = _r(_pct(lens, 0.10))
         st["support_ratio"] = _r(_pct(lens, 0.10) / med, 4) if med > 0 else None
     st["uv"] = uv_stats(bm, me)
+    organic = any(m.type in ("ARMATURE", "MULTIRES") for m in obj.modifiers) or any(
+        k in obj.name.lower() for k in ("head", "face", "body", "torso", "hand", "foot", "char", "base_mesh", "basemesh"))
+    if organic:
+        try:
+            st["closed_loops"] = closed_loops(bm)
+        except Exception as exc:  # pragma: no cover
+            st["closed_loops"] = {"error": str(exc)}
     try:
         st["quality"] = mesh_quality(bm)
     except Exception as exc:  # pragma: no cover
         st["quality"] = {"error": str(exc)}
     bm.free()
 
+    try:
+        sk = sculpt_info(obj, me, st)
+        if sk:
+            st["sculpt"] = sk
+        if organic or (sk and sk.get("kind")):
+            st["symmetry"] = symmetry_share(me)
+        sk_info = skin_info(obj)
+        if sk_info:
+            st["skin"] = sk_info
+    except Exception as exc:  # pragma: no cover
+        st["character_error"] = str(exc)
+    if me.shape_keys:
+        st["shape_key_names"] = [k.name for k in me.shape_keys.key_blocks][:80]
     # after modifiers
     try:
         ev = obj.evaluated_get(depsgraph)
@@ -498,6 +762,7 @@ def object_info(obj, depsgraph):
         "data": obj.data.name if obj.data else None,
         "data_users": obj.data.users if obj.data else 0,
         "parent": obj.parent.name if obj.parent else None,
+        "parent_type": obj.parent_type, "parent_bone": obj.parent_bone or None,
         "collections": [c.name for c in obj.users_collection],
         "hide_viewport": obj.hide_get() if hasattr(obj, "hide_get") else False,
         "hide_render": obj.hide_render,
@@ -520,6 +785,11 @@ def object_info(obj, depsgraph):
     }
     if obj.type == "MESH":
         me = obj.data
+        try:
+            zs = [(obj.matrix_world @ __import__("mathutils").Vector(c)).z for c in obj.bound_box]
+            d["world_z"] = [_r(min(zs), 4), _r(max(zs), 4)]
+        except Exception:
+            pass
         d["color_attributes"] = [f"{a.name}:{a.domain}" for a in getattr(me, "color_attributes", [])]
         d["shape_keys"] = len(me.shape_keys.key_blocks) if me.shape_keys else 0
         d["particle_systems"] = [ps.settings.type for ps in obj.particle_systems]
@@ -541,6 +811,12 @@ def object_info(obj, depsgraph):
             d["light"]["area_size"] = _r(L.size, 4)
         if L.type == "SUN":
             d["light"]["angle_deg"] = _r(math.degrees(L.angle), 3)
+    elif obj.type == "ARMATURE":
+        try:
+            d["armature"] = armature_info(obj)
+        except Exception as exc:  # pragma: no cover
+            d["armature"] = {"error": str(exc)}
+        d["children_on_bones"] = sum(1 for c in obj.children if c.parent_type == "BONE")
     elif obj.type == "CAMERA":
         c = obj.data
         d["camera"] = {"type": c.type, "lens": _r(c.lens, 3), "sensor_width": _r(c.sensor_width, 3),
@@ -913,6 +1189,11 @@ def analyse():
                 except Exception:
                     pass
     doc["modifier_rna_defaults"] = defaults
+    try:
+        doc["clearance"] = clearance_pass(list(scene.objects))
+    except Exception as exc:  # pragma: no cover
+        doc["clearance"] = {"error": str(exc)}
+    doc["actions"] = [{"name": a.name, "frames": [_r(x, 1) for x in a.frame_range]} for a in bpy.data.actions][:60]
     for obj in extra[:400]:
         try:
             info = object_info(obj, depsgraph)

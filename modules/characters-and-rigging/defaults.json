@@ -1,0 +1,7 @@
+{
+  "character_height_m": 1.805,
+  "rest_pose": "A-pose",
+  "skeleton_naming": "unreal",
+  "max_influences": 4,
+  "_notes": "Standard: Unreal mannequin height and naming, A-pose, at most 4 weights per vertex."
+}

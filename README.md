@@ -4,13 +4,15 @@
 
 <h1 align="center">SkillBlend</h1>
 
-<p align="center"><b>Point it at your Blender project. It learns how you model and writes a Claude Code skill that models the same way.</b></p>
+<p align="center"><b>Point it at your Blender project. It learns how you model and writes a skill your AI assistant uses to model the same way: Claude Code, OpenAI Codex, Cursor, Gemini CLI, GitHub Copilot, Windsurf, or any chat model, local ones included.</b></p>
 
 <p align="center">
   <img src="docs/images/step2-top.png" width="900" alt="SkillBlend showing what it learned from a project">
 </p>
 
-SkillBlend is a local app for Blender artists who use [Claude Code](https://claude.com/claude-code). Point it at your project. It reads your `.blend` files (and the Python build scripts next to them, if you have any) and works out how you build models: how you bevel, your stack order, how you hold SubD edges, how you cut openings, your kit pieces, your material palette, your texel density, your high/low setup. Then it writes all of that into a **skill**: a folder Claude Code loads so that when you ask it to model something in Blender, it works your way and checks its own result against your style.
+SkillBlend is a local app for Blender artists who work with an AI assistant. Point it at your project. It reads your `.blend` files (and the Python build scripts next to them, if you have any) and works out how you build models: how you bevel, your stack order, how you hold SubD edges, how you cut openings, your kit pieces, your materials and node setups, your texel density, your high/low setup, your characters, rigs and sculpts. Then it writes all of that into a **skill** your assistant follows, so when you ask it to model something in Blender, it works your way and checks its own result against your style.
+
+It installs into [Claude Code](https://claude.com/claude-code) as a skill, into a project as instruction files for OpenAI Codex (and every other `AGENTS.md` tool), Cursor, Gemini CLI, GitHub Copilot and Windsurf, or as a ready-made system prompt for any chat model, including local models in Ollama or LM Studio.
 
 - **Nothing to fill in.** You don't answer an interview or tag files. SkillBlend sorts your files by technique itself.
 - **Measured, not guessed.** Every rule in the skill comes from your files, with the numbers and how many files they came from.
@@ -22,25 +24,27 @@ SkillBlend is a local app for Blender artists who use [Claude Code](https://clau
 
 ## Install it with one prompt
 
-Already use Claude Code? Paste this in and Claude does the rest: it installs SkillBlend, learns your files and installs your skill. It only stops to ask you a few questions. (Also in [INSTALL_WITH_CLAUDE.md](INSTALL_WITH_CLAUDE.md).)
+Use a coding assistant that can run commands (Claude Code, Codex, Cursor, Gemini CLI, Copilot, Windsurf...)? Paste this in and it does the rest: it installs SkillBlend, learns your files and installs your skill for itself. It only stops to ask you a few questions. (Also in [INSTALL_WITH_AI.md](INSTALL_WITH_AI.md).)
 
 ```text
-Install SkillBlend (https://github.com/1337VIPER/skillblend) and use it to learn how I model in Blender, then make me a skill from it.
+Install SkillBlend (https://github.com/1337VIPER/skillblend) and use it to learn how I model in Blender, then make me a skill for you from it.
 
 1. Ask me where to put it (default: a "skillblend" folder in my home folder) and clone the repo there.
 2. Check that Python 3.9 or newer is available, and find my Blender install (4.2 or newer). If you can't find Blender, ask me for the path. Then run:
    python skillblend.py config --blender "<path to blender>"
-3. Install the SkillBlend helper skill:
-   python skillblend.py install-driver
+3. If you are Claude Code, install the SkillBlend helper skill: python skillblend.py install-driver
+   (Other assistants: read AGENTS.md in the repo instead; it explains the same steps.)
 4. Ask me which folder holds my Blender models, and whether I keep a kitbash or insert library in another folder. Then run:
    python skillblend.py learn "<models folder>" ["<kit folder>"]
 5. Run "python skillblend.py report" and explain to me, in plain language, what it learned about how I model. Point out anything that looks off, and ask whether I want to leave any file out.
-6. Ask me three things: what to call my skill, whether my kitbash pieces are my own work (if yes, run: python skillblend.py answer kit-library kit_redistribute true), and whether to copy my .blend files into the skill so you can study them (if yes, add --examples). Then build and install it:
+6. Ask me three things: what to call my skill, whether my kitbash pieces are my own work (if yes, run: python skillblend.py answer kit-library kit_redistribute true), and whether to copy my .blend files into the skill so you can study them (if yes, add --examples). Then build it:
    python skillblend.py build --name "<name>" [--examples]
-   python skillblend.py install "<the folder the build printed>"
-7. Tell me to start a new Claude Code session, and give me two example prompts to try my new skill.
+7. Install it for the assistant I'm using, with --for set to yourself: claude (Claude Code), codex (OpenAI Codex and other AGENTS.md tools), cursor, gemini (Gemini CLI), copilot or windsurf. For anything but Claude Code, ask me for the project folder I work in:
+   python skillblend.py install "<the folder the build printed>" --for <you> [--project-dir "<project>"]
+   If I use a plain chat model (ChatGPT, a local model in Ollama or LM Studio), give me exports/system-prompt.md from the built folder to paste in as the system prompt.
+8. Tell me to start a new session, and give me two example prompts to try my new skill.
 
-Never open, change or save any of my .blend files: SkillBlend only reads them. If I'd rather click through it myself, run "python skillblend.py app" instead of steps 4 to 6 and tell me to follow the three steps in my browser.
+Never open, change or save any of my .blend files: SkillBlend only reads them. If I'd rather click through it myself, run "python skillblend.py app" instead of steps 4 to 7 and tell me to follow the three steps in my browser.
 ```
 
 Prefer to click through it yourself? See [Quick start](#quick-start).
@@ -48,6 +52,7 @@ Prefer to click through it yourself? See [Quick start](#quick-start).
 ## Contents
 
 - [Install it with one prompt](#install-it-with-one-prompt)
+- [Use it with any AI](#use-it-with-any-ai)
 - [Quick start](#quick-start)
 - [Using the app, step by step](#using-the-app-step-by-step)
 - [What you get](#what-you-get)
@@ -57,6 +62,27 @@ Prefer to click through it yourself? See [Quick start](#quick-start).
 - [Privacy and licences](#privacy-and-licences)
 - [Extending SkillBlend](#extending-skillblend)
 - [Tests](#tests)
+
+## Use it with any AI
+
+Every skill SkillBlend builds works with several assistants. Pick them in the app's last step, or on the command line:
+
+```bash
+python skillblend.py install workspace/build/my-style                       # Claude Code (skills folder)
+python skillblend.py install workspace/build/my-style --for codex,cursor,gemini,copilot,windsurf --project-dir D:/Art/MyGame
+```
+
+| Assistant | What SkillBlend writes |
+|---|---|
+| Claude Code | the skill folder in `~/.claude/skills/<name>/` (loads by itself) |
+| OpenAI Codex, Jules, Amp, OpenCode, Zed and other `AGENTS.md` tools | a SkillBlend block in the project's `AGENTS.md` |
+| Cursor | `.cursor/rules/<name>.mdc`, picked when you work on Blender models |
+| Gemini CLI | a block in `GEMINI.md` |
+| GitHub Copilot | a block in `.github/copilot-instructions.md` |
+| Windsurf | `.windsurf/rules/<name>.md` |
+| Any chat model (ChatGPT, Ollama, LM Studio, Open WebUI...) | `exports/system-prompt.md`, a compact self-contained prompt (about 16k characters) to paste as the system prompt |
+
+For project tools, the style's scripts, references and numbers are copied to `<project>/.skillblend/<name>/`, and the instruction file points there. Shared files like `AGENTS.md` get a marked block that's replaced on reinstall, so the rest of your file is never touched. Every build also writes all of these formats to the skill's `exports/` folder, so you can copy them by hand.
 
 ## Quick start
 
@@ -126,6 +152,7 @@ A skill folder, installed to `~/.claude/skills/<name>/`:
 | `scripts/style_check.py` | Checks any `.blend` against your style and lists what's off, ending in `STYLE ok` or a count of warnings. Claude runs it before calling a model done. |
 | `references/` | The full method for each technique, with your measurements on top, plus your kit catalogue, your **modifier dictionary** and your **shader recipes**. |
 | `examples/`, `kit/` | Your files, build scripts and helper kit, only if you chose to include them. |
+| `exports/` | The same skill for other AI tools: `AGENTS.md`, `GEMINI.md`, `copilot-instructions.md`, a Cursor rule, and `system-prompt.md` for any chat model. |
 
 Here's what the start of a built `SKILL.md` looks like (from the demo project):
 
@@ -189,6 +216,8 @@ The details are in **[docs/how-it-works.md](docs/how-it-works.md)**.
 | UVs and texel density | hold unwrapped export meshes | texel density (and its range), island density spread, packing, seams, UV channels, UDIMs |
 | Game-ready and export | are high/low/game/LOD files or pairs | high/low naming, triangle ratio, LOD count, material slots on the game mesh, triangulation |
 | Vehicles | have at least 3 wheel or tyre parts | overall proportions, wheel size relative to length |
+| Characters and rigging | have an armature or skinned meshes | height and heads tall, A- or T-pose, skeleton naming (Unreal, Mixamo, Rigify, Unity) and size, bone constraints, weights (influences per vertex, unweighted and unnormalised vertices), closed edge loops round neck, limbs, eyes and mouth, symmetry, garment clearance over the body, gear on bones, face shape keys (ARKit names), animation actions |
+| Sculpting | have sculpt objects (Multires, dynamic-topology or voxel-remeshed meshes, face sets, masks) | your sculpt method, Multires levels, how fine detail goes (edge length as a share of the object), voxel size, face sets and masks, symmetry, and whether a clean game mesh sits next to the sculpt |
 | Lighting, world and render | have lights, cameras or a node world | render engine and samples, colour management (view transform, look, exposure), world (HDRI, sky or flat colour) and strength, your light rig and powers, camera lenses |
 
 ## Command line

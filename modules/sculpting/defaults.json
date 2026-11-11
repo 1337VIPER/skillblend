@@ -1,0 +1,4 @@
+{
+  "sculpt_method": "multires",
+  "_notes": "Standard: sculpt detail as Multires on a clean quad base, which bakes onto the game mesh."
+}

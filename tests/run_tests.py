@@ -119,7 +119,7 @@ def main():
               "kit_library.blend": "kit-library", "gameready_canister.blend": "game-ready-export",
               "vehicle_body.blend": "vehicles", "stack_rail.blend": "modifier-stacks",
               "bevel_junction_box.blend": "bevels-and-shading",
-              "lookdev_lamp_post.blend": "shaders-and-nodes"}
+              "lookdev_lamp_post.blend": "shaders-and-nodes", "character_demo.blend": "characters-and-rigging"}
     for f, mid in expect.items():
         check(mid in det.get(f, set()), f"learn detects {mid} in {f}")
     check("vehicles" not in det.get("boolean_panel.blend", set()), "no false vehicle")
@@ -138,6 +138,24 @@ def main():
     check(n2.get("gn_groups") == ["CableFromCurve"], "Geometry Nodes group measured")
     check(n2.get("quality_aspect_p90") and n2.get("quality_skew_p90") is not None and "edge_profile" in n2, "mesh quality measured")
     check(n2.get("subd_hold_mm") and n2.get("subd_pinched_max") is not None, "SubD holding loops and pinching measured")
+    check(n2.get("skeleton_naming") == "unreal" and n2.get("rest_pose") == "A-pose" and n2.get("face_shape_keys") == "arkit",
+          "character measured (Unreal skeleton, A-pose, ARKit face keys)")
+    check(n2.get("garment_clearance_mm") and 0 < n2["garment_clearance_mm"] < 20, "garment clearance over the body measured")
+    check(n2.get("multires_levels") == 2 and n2.get("sculpt_detail_pct"), "sculpting measured (Multires levels, sculpt detail)")
+    ex = os.path.join(res2["dir"], "exports") if res2.get("dir") else ""
+    check(all(os.path.isfile(os.path.join(ex, f)) for f in ("AGENTS.md", "GEMINI.md", "system-prompt.md", "copilot-instructions.md")),
+          "exports for other AI tools written with the build")
+    aiproj_dir = os.path.join(tmp, "aiproj")
+    os.makedirs(aiproj_dir)
+    with open(os.path.join(aiproj_dir, "AGENTS.md"), "w") as fh:
+        fh.write("# Existing notes\n")
+    for _ in range(2):
+        code, out = forge(ws2, "install", res2.get("dir", ""), "--for", "codex,cursor,gemini,copilot,windsurf,prompt", "--project-dir", aiproj_dir)
+    agents = open(os.path.join(aiproj_dir, "AGENTS.md"), encoding="utf-8").read()
+    check(code == 0 and agents.startswith("# Existing notes") and agents.count(":start -->") == 1,
+          "installing for other AIs keeps the user's AGENTS.md and replaces its own block")
+    check(os.path.isdir(os.path.join(aiproj_dir, ".skillblend")) and os.path.isfile(os.path.join(aiproj_dir, ".cursor", "rules", res2["name"] + ".mdc")),
+          "portable style files and the Cursor rule are installed in the project")
     refs = os.listdir(os.path.join(res2["dir"], "references")) if res2.get("dir") else []
     check("modifier-dictionary.md" in refs and "shader-recipes.md" in refs, "reference tables written into the skill")
 

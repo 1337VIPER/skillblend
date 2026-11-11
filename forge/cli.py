@@ -250,17 +250,35 @@ def _skills_dir(scope, project_dir):
 
 
 def cmd_install(ws, mods, a):
+    from .targets import TARGETS, install_targets
     src = os.path.abspath(a.dir)
     if not os.path.isfile(os.path.join(src, "SKILL.md")):
         sys.exit(f"No SKILL.md in {src}")
-    name = os.path.basename(src.rstrip("\\/"))
-    dst = os.path.join(_skills_dir(a.scope, a.project_dir), name)
-    if os.path.exists(dst):
-        if not a.force:
-            sys.exit(f"{dst} already exists. Re-run with --force to replace it.")
-        shutil.rmtree(dst)
-    shutil.copytree(src, dst)
-    print(f"Installed to {dst}. Start a new Claude Code session to load it.")
+    tools = [t.strip() for t in (a.target or "claude").split(",") if t.strip()]
+    if "all" in tools:
+        tools = list(TARGETS)
+    bad = [t for t in tools if t not in TARGETS]
+    if bad:
+        sys.exit(f"Unknown target(s) {bad}. Choose from: {', '.join(TARGETS)} (or all).")
+    if "claude" in tools:
+        name = os.path.basename(src.rstrip("\\/"))
+        dst = os.path.join(_skills_dir(a.scope, a.project_dir), name)
+        if os.path.exists(dst):
+            if not a.force:
+                sys.exit(f"{dst} already exists. Re-run with --force to replace it.")
+            shutil.rmtree(dst)
+        shutil.copytree(src, dst, ignore=shutil.ignore_patterns("exports"))
+        print(f"Claude Code: installed to {dst}. Start a new Claude Code session to load it.")
+    others = [t for t in tools if t != "claude"]
+    if others:
+        try:
+            done = install_targets(src, others, a.project_dir)
+        except ValueError as exc:
+            sys.exit(str(exc))
+        for t, p in done.items():
+            print(f"{TARGETS[t].split(' (')[0]}: {p}")
+        if any(t != "prompt" for t in others):
+            print(f"The style's scripts and references were copied to {os.path.join(os.path.abspath(a.project_dir), '.skillblend')}.")
     return 0
 
 
@@ -336,7 +354,7 @@ def cmd_config(ws, mods, a):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="skillblend.py", description="SkillBlend: build a Claude Code skill that models like you.")
+    p = argparse.ArgumentParser(prog="skillblend.py", description="SkillBlend: learn how you model in Blender and turn it into a skill for Claude Code, Codex, Cursor, Gemini, Copilot or any AI model.")
     p.add_argument("--workspace", help="workspace folder (default: ./workspace or $FORGE_WORKSPACE)")
     p.add_argument("--version", action="version", version=__version__)
     sp = p.add_subparsers(dest="cmd", required=True)
@@ -356,14 +374,15 @@ def main(argv=None):
     s = sp.add_parser("build", help="build the skill")
     s.add_argument("--name"); s.add_argument("--author"); s.add_argument("--generic", action="store_true", help="build the generic skill, ignoring submissions")
     s.add_argument("--exclude", help="comma-separated module ids to leave out")
-    s.add_argument("--examples", action="store_true", help="copy your .blend files and build scripts into the skill so Claude can study them")
+    s.add_argument("--examples", action="store_true", help="copy your .blend files and build scripts into the skill so the AI can study them")
     s.add_argument("--no-examples", action="store_true", help=argparse.SUPPRESS)
     s.add_argument("--out"); s.add_argument("--json", action="store_true"); s.set_defaults(f=cmd_build)
-    for name, fn, hlp in (("install", cmd_install, "copy a built skill into Claude Code's skills folder"),
+    for name, fn, hlp in (("install", cmd_install, "install a built skill for Claude Code (default) or other AI tools (--for codex,cursor,gemini,copilot,windsurf,prompt,all)"),
                           ("install-driver", cmd_install_driver, "install the skill that lets Claude run the SkillBlend interview")):
         s = sp.add_parser(name, help=hlp)
         if name == "install":
             s.add_argument("dir")
+            s.add_argument("--for", dest="target", default="claude", help="claude, codex, cursor, gemini, copilot, windsurf, prompt or all (comma-separated)")
         s.add_argument("--scope", choices=["user", "project"], default="user"); s.add_argument("--project-dir"); s.add_argument("--force", action="store_true"); s.set_defaults(f=fn)
     s = sp.add_parser("learn", help="learn the style of a whole project folder (finds and sorts the .blend files itself)")
     s.add_argument("folder", nargs="+", help="project folder(s); add your kit library's folder or file too"); s.add_argument("--workers", type=int); s.add_argument("--build", action="store_true", help="build the skill right after")
