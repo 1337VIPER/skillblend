@@ -229,6 +229,9 @@ def cmd_build(ws, mods, a):
     except buildlib.NothingSubmitted as exc:
         print(str(exc))
         return 2
+    except buildlib.UnsafeOutput as exc:
+        print(str(exc))
+        return 1
     if a.json:
         print(json.dumps(res, indent=2))
         return 0
@@ -250,35 +253,37 @@ def _skills_dir(scope, project_dir):
 
 
 def cmd_install(ws, mods, a):
-    from .targets import TARGETS, install_targets
+    from .targets import ALIASES, TARGETS, canonical, describe, install_skill, skill_dirs
     src = os.path.abspath(a.dir)
     if not os.path.isfile(os.path.join(src, "SKILL.md")):
         sys.exit(f"No SKILL.md in {src}")
-    tools = [t.strip() for t in (a.target or "claude").split(",") if t.strip()]
-    if "all" in tools:
-        tools = list(TARGETS)
+    asked = [t.strip() for t in (a.target or "claude").split(",") if t.strip()]
+    if "all" in asked:
+        asked = ["claude", "agents", "prompt"] + (["agents-md"] if a.project_dir else [])
+    tools = canonical(asked)
     bad = [t for t in tools if t not in TARGETS]
     if bad:
-        sys.exit(f"Unknown target(s) {bad}. Choose from: {', '.join(TARGETS)} (or all).")
-    if "claude" in tools:
-        name = os.path.basename(src.rstrip("\\/"))
-        dst = os.path.join(_skills_dir(a.scope, a.project_dir), name)
-        if os.path.exists(dst):
-            if not a.force:
-                sys.exit(f"{dst} already exists. Re-run with --force to replace it.")
-            shutil.rmtree(dst)
-        shutil.copytree(src, dst, ignore=shutil.ignore_patterns("exports"))
-        print(f"Claude Code: installed to {dst}. Start a new Claude Code session to load it.")
-    others = [t for t in tools if t != "claude"]
-    if others:
-        try:
-            done = install_targets(src, others, a.project_dir)
-        except ValueError as exc:
-            sys.exit(str(exc))
-        for t, p in done.items():
-            print(f"{TARGETS[t].split(' (')[0]}: {p}")
-        if any(t != "prompt" for t in others):
-            print(f"The style's scripts and references were copied to {os.path.join(os.path.abspath(a.project_dir), '.skillblend')}.")
+        sys.exit(f"Unknown target(s) {bad}. Choose from: {', '.join(list(TARGETS) + sorted(ALIASES))} (or all).")
+    if not a.force:
+        there = [d for d in skill_dirs(src, tools, a.scope, a.project_dir).values() if os.path.isdir(d) and os.listdir(d)]
+        if there:
+            sys.exit(f"{there[0]} already exists. Re-run with --force to update it (files you added there are kept, "
+                     "and anything you edited is backed up first).")
+    try:
+        done = install_skill(src, tools, a.scope, a.project_dir, backup_root=os.path.join(ws.root, "backups"))
+    except ValueError as exc:
+        sys.exit(str(exc))
+    label = {"claude": "Claude Code", "agents": "Codex, Cursor, Gemini CLI, Copilot, Windsurf (.agents/skills)",
+             "agents-md": "AGENTS.md pointer", "prompt": "System prompt for chat models"}
+    for t, rep in done.items():
+        print(f"{label[t]}: {rep['path']}")
+        for line in describe(rep):
+            print(f"  {line}")
+        for p in rep.get("cleaned", []):
+            print(f"  Replaced what an earlier SkillBlend wrote: {p}")
+    if "claude" in done or "agents" in done:
+        print("Start a new session in your AI tool to load the skill. Your own rules go in NOTES.md inside the skill folder; "
+              "SkillBlend never changes that file.")
     return 0
 
 
@@ -290,6 +295,7 @@ def cmd_install_driver(ws, mods, a):
     os.makedirs(dst_dir, exist_ok=True)
     with open(src, encoding="utf-8") as fh:
         text = fh.read().replace("{{FORGE}}", os.path.join(paths.REPO, "skillblend.py").replace("\\", "/"))
+    text = text.replace("{{MODULES}}", str(len(mods)))
     with open(os.path.join(dst_dir, "SKILL.md"), "w", encoding="utf-8") as fh:
         fh.write(text)
     print(f"Installed the driver skill to {dst_dir}. In Claude Code, say \"start skillblend\".")
@@ -345,6 +351,11 @@ def cmd_app(ws, mods, a):
     return serve(ws, port=a.port, open_browser=not a.no_browser)
 
 
+def cmd_eval(ws, mods, a):
+    from . import evalkit
+    return evalkit.main(ws, a)
+
+
 def cmd_config(ws, mods, a):
     if a.blender and not os.path.isfile(a.blender):
         sys.exit(f"Not a file: {a.blender}")
@@ -377,13 +388,20 @@ def main(argv=None):
     s.add_argument("--examples", action="store_true", help="copy your .blend files and build scripts into the skill so the AI can study them")
     s.add_argument("--no-examples", action="store_true", help=argparse.SUPPRESS)
     s.add_argument("--out"); s.add_argument("--json", action="store_true"); s.set_defaults(f=cmd_build)
-    for name, fn, hlp in (("install", cmd_install, "install a built skill for Claude Code (default) or other AI tools (--for codex,cursor,gemini,copilot,windsurf,prompt,all)"),
+    for name, fn, hlp in (("install", cmd_install, "install a built skill for Claude Code (default) or other AI tools (--for codex,cursor,gemini,copilot,windsurf,agents-md,prompt,all)"),
                           ("install-driver", cmd_install_driver, "install the skill that lets Claude run the SkillBlend interview")):
         s = sp.add_parser(name, help=hlp)
         if name == "install":
             s.add_argument("dir")
-            s.add_argument("--for", dest="target", default="claude", help="claude, codex, cursor, gemini, copilot, windsurf, prompt or all (comma-separated)")
-        s.add_argument("--scope", choices=["user", "project"], default="user"); s.add_argument("--project-dir"); s.add_argument("--force", action="store_true"); s.set_defaults(f=fn)
+            s.add_argument("--for", dest="target", default="claude",
+                           help="comma-separated: claude; codex, cursor, gemini, copilot or windsurf (one shared .agents/skills "
+                                "folder they all read); agents-md (a short pointer in the project's AGENTS.md); prompt; or all")
+        s.add_argument("--scope", choices=["user", "project"], default="user",
+                       help="user: your home folder (default). project: inside --project-dir")
+        s.add_argument("--project-dir", help="the project folder; with it, the shared .agents/skills copy goes into that project")
+        s.add_argument("--force", "--update", dest="force", action="store_true",
+                       help="update a skill that's already installed (files you added are kept, edits are backed up)")
+        s.set_defaults(f=fn)
     s = sp.add_parser("learn", help="learn the style of a whole project folder (finds and sorts the .blend files itself)")
     s.add_argument("folder", nargs="+", help="project folder(s); add your kit library's folder or file too"); s.add_argument("--workers", type=int); s.add_argument("--build", action="store_true", help="build the skill right after")
     s.add_argument("--name"); s.add_argument("--author"); s.add_argument("--generic", action="store_true", help=argparse.SUPPRESS)
@@ -394,6 +412,8 @@ def main(argv=None):
     s = sp.add_parser("app", help="open the SkillBlend app in your browser"); s.add_argument("--port", type=int, default=4970)
     s.add_argument("--no-browser", action="store_true"); s.set_defaults(f=cmd_app)
     s = sp.add_parser("config", help="set the Blender path or your author name"); s.add_argument("--blender"); s.add_argument("--author"); s.set_defaults(f=cmd_config)
+    from .evalkit import add_parser as add_eval_parser
+    add_eval_parser(sp, cmd_eval)
 
     a = p.parse_args(argv)
     ws = Workspace(a.workspace)

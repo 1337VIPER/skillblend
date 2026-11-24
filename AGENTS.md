@@ -2,7 +2,7 @@
 
 This repository is SkillBlend: it learns how an artist builds Blender models and writes a skill their AI assistant follows. If a user asks you to run SkillBlend, learn their Blender project or make them a modelling skill, follow these steps. Run every command from the repository root. (Claude Code users can also run `python skillblend.py install-driver` to get these instructions as a skill.)
 
-When you install the result, use `--for` with the assistant you are: `claude`, `codex` (OpenAI Codex and other AGENTS.md tools), `cursor`, `gemini`, `copilot` or `windsurf`, plus `--project-dir` for anything but Claude Code.
+When you install the result, use `--for` with the assistant you are: `claude`, `codex`, `cursor`, `gemini`, `copilot` or `windsurf`. Everything but Claude Code shares one `.agents/skills` folder; add `--project-dir` to install into one project instead of the user's home folder.
 
 To work on SkillBlend's own code: the analyser is `forge/blender/analyse_blend.py` (runs inside Blender), technique modules are in `modules/<id>/` (`module.json`, `rules.py` with `detect()` and `rules()`, `check.py`, `generic.md`, `defaults.json`), and `python tests/run_tests.py` runs the full test suite (needs Blender). See docs/how-it-works.md.
 
@@ -20,7 +20,7 @@ You are the interviewer. The artist models; you request, measure, ask and build.
 
 ## 1. Start
 1. `status --json`. If `blender` is null, ask the artist for the path to blender.exe (or the Blender app) and run `config --blender PATH`. If no author is set, ask what name the skill should credit and run `config --author "NAME"` (they may decline; that's fine).
-2. Explain the deal in two or three lines. There are 16 technique modules (build scripts are read from the project, the rest can be requested). Each asks for one specific model that shows that technique. Every module they submit makes the skill more like them. Anything they skip falls back to the generic workflow. They can stop at any time and build.
+2. Explain the deal in two or three lines. Each part of the workflow is a technique module (`modules` lists them; build scripts are read from the project, the rest can be requested). Each asks for one specific model that shows that technique. Every module they submit makes the skill more like them. Anything they skip falls back to the generic workflow. They can stop at any time and build.
 3. Ask whether they want to go through every module, pick some, or build the generic skill straight away.
 
 ## 2. Each module
@@ -39,7 +39,8 @@ The artist can submit more than one file per module; more files make the medians
 - **Exit code 2 / "No models have been submitted"**: ask whether they want the generic skill. Only on a yes, run `build --generic --json`. The generic skill is SkillBlend's built-in workflow. It's complete and tested, but it isn't personalised; say so.
 - Summarise the result: which modules are measured, which are generic, and any warnings.
 - The kit-library module copies kit files into the skill only if `kit_redistribute` was answered true. Never change that answer for them. Their files are copied into `examples/` only with `--examples`. Ask first, and suggest leaving it off if the files are private or large or the skill will be shared.
-- Install with `install "<dir>"` for Claude Code (add `--force` to replace an earlier build, after they agree). For other assistants add `--for codex,cursor,gemini,copilot,windsurf` and `--project-dir <their project>`; for a plain chat model give them `exports/system-prompt.md` from the built folder. It installs to `~/.claude/skills/`; use `--scope project --project-dir DIR` to install into one project instead. Tell them to start a new Claude Code session to load it.
+- Install with `install "<dir>"` for Claude Code (`~/.claude/skills/`; `--scope project --project-dir DIR` installs into one project instead). For OpenAI Codex, Cursor, Gemini CLI, GitHub Copilot or Windsurf add `--for codex` (or any of those names: they all read one shared `.agents/skills` folder, so one install serves them all), plus `--project-dir <their project>` to install it for that project only. `--for agents-md --project-dir DIR` adds a short pointer to the project's `AGENTS.md`, for tools that read `AGENTS.md` but not skills. For a plain chat model give them `exports/system-prompt.md` from the built folder. Tell them to start a new session to load it.
+- If the skill is already installed, `install` stops and asks for `--force`. After they agree, add it: the update keeps every file they added to the skill, moves sections they wrote into SKILL.md over to `NOTES.md`, and backs up anything they edited. Read them the lines it prints. Tell them their own rules belong in `NOTES.md` inside the installed skill, which SkillBlend never changes.
 
 ## Rules
 - Never invent measurements or answers. The skill's rules come only from the files, the answers and the generic modules.

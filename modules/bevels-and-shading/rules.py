@@ -146,6 +146,7 @@ def rules(ctx):
             r.rule(f"Profile shape: {L.fmt(prof)} (not the default 0.5).")
         r.number("bevel_harden_normals", harden >= 0.5)
         r.number("bevel_clamp", clamp >= 0.5)
+        r.number("bevel_miter_outer", miter)
         r.rule(f"Harden Normals {'on' if harden >= 0.5 else 'off'} ({L.percent(harden)}), "
                f"Clamp Overlap {'on' if clamp >= 0.5 else 'off'} ({L.percent(clamp)}), outer miter {miter}.")
     bw = [o for o in parts if o["mesh"].get("bevel_weight_edges")]

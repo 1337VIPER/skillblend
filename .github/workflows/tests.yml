@@ -1,0 +1,59 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: unit (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests (no Blender)
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+  blender:
+    name: end to end (Blender ${{ matrix.blender }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # the oldest supported LTS, the next LTS, and the versions SkillBlend is developed on
+        blender: ["4.2.0", "4.5.0", "5.0.0", "5.3.0"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Libraries Blender needs to start without a display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libxkbcommon0 libsm6 libice6
+      - name: Cache Blender
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/blender
+          key: blender-${{ matrix.blender }}-linux-x64
+      - name: Download Blender ${{ matrix.blender }}
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          v="${{ matrix.blender }}"
+          mkdir -p ~/blender
+          curl -fsSL "https://download.blender.org/release/Blender${v%.*}/blender-${v}-linux-x64.tar.xz" | tar -xJ --strip-components=1 -C ~/blender
+      - name: End-to-end tests
+        run: |
+          ~/blender/blender --version | head -1
+          python tests/run_tests.py --blender ~/blender/blender

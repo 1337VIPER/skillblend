@@ -138,14 +138,43 @@ def set_origin(ob, mode=None):
 
 
 # ------------------------------------------------------------------ modifiers
+TIER_SCALE = {"small": 0.5, "fine": 0.5, "medium": 1.0, "mid": 1.0, "large": 2.0, "big": 2.0}
+
+
+def bevel_tiers():
+    """The artist's measured bevel widths in metres, smallest first ([] when the files showed only one width)."""
+    return sorted(float(t) for t in (get("bevel_tiers_m") or []) if t)
+
+
+def bevel_width(ob, tier=1.0):
+    """The bevel width (metres) the style gives this part.
+
+    tier="small", "medium" or "large" picks one of the artist's measured tiers by the edge's role. A number scales
+    the width the part's size calls for (0.5 small edge, 2 big chamfer). When the artist works in tiers, the result
+    is always one of them: the nearest to what the part's size calls for, never a fresh width per part."""
+    tiers = bevel_tiers()
+    ratio = get("bevel_width_ratio")
+    dims = max(ob.dimensions) if max(ob.dimensions) > 0 else 1.0
+    base = ratio * dims if ratio else get("bevel_width_m", 0.002)
+    if isinstance(tier, str):
+        key = tier.strip().lower()
+        if key not in TIER_SCALE:
+            raise ValueError(f"tier must be a number or one of {sorted(TIER_SCALE)}, not {tier!r}")
+        if tiers:
+            return tiers[{0.5: 0, 1.0: (len(tiers) - 1) // 2, 2.0: len(tiers) - 1}[TIER_SCALE[key]]]
+        return base * TIER_SCALE[key]
+    want = base * float(tier)
+    if tiers and want > 0:
+        return min(tiers, key=lambda t: abs(math.log(t / want)))
+    return want
+
+
 def bevel(ob, width=None, segments=None, tier=1.0, name_="Bevel"):
-    """A Bevel modifier with the style's settings. tier scales the width (0.5 small edge, 2 big chamfer)."""
+    """A Bevel modifier with the style's settings. Leave `width` out and pick the size with `tier`:
+    "small", "medium" or "large" (the artist's measured tiers), or a number that scales the width for the part's
+    size (0.5 small edge, 2 big chamfer). See bevel_width()."""
     m = ob.modifiers.new(name_, "BEVEL")
-    if width is None:
-        ratio = get("bevel_width_ratio")
-        dims = max(ob.dimensions) if max(ob.dimensions) > 0 else 1.0
-        width = ratio * dims if ratio else get("bevel_width_m", 0.002)
-    m.width = width * tier
+    m.width = bevel_width(ob, tier) if width is None else width * (tier if isinstance(tier, (int, float)) else 1.0)
     m.segments = int(segments or get("bevel_segments", 3))
     lim = get("bevel_limit_method", "ANGLE")
     m.limit_method = lim
@@ -155,7 +184,10 @@ def bevel(ob, width=None, segments=None, tier=1.0, name_="Bevel"):
         m.profile = float(get("bevel_profile"))
     m.harden_normals = bool(get("bevel_harden_normals", True))
     m.use_clamp_overlap = bool(get("bevel_clamp", False))
-    m.miter_outer = "MITER_ARC"
+    try:
+        m.miter_outer = get("bevel_miter_outer") or "MITER_ARC"
+    except TypeError:
+        m.miter_outer = "MITER_ARC"
     return m
 
 
@@ -289,17 +321,32 @@ def build_material(name):
         p.inputs["Emission Color"].default_value = (*rec["emission_color"][:3], 1.0)
     proc = rec.get("procedural") or {}
     if "Roughness" in proc and "Noise" in proc["Roughness"]:
-        tc, noise, ramp = nt.nodes.new("ShaderNodeTexCoord"), nt.nodes.new("ShaderNodeTexNoise"), nt.nodes.new("ShaderNodeValToRGB")
-        noise.inputs["Scale"].default_value = 20.0
+        # the artist's own break-up: their noise scale and the roughness range it maps to, where the files showed them
+        rn = rec.get("roughness_noise") or {}
         r0 = float(rec.get("roughness", 0.45))
-        ramp.color_ramp.elements[0].color = (max(0.0, r0 - 0.12),) * 3 + (1.0,)
-        ramp.color_ramp.elements[1].color = (min(1.0, r0 + 0.12),) * 3 + (1.0,)
-        nt.links.new(tc.outputs["Object"], noise.inputs["Vector"])
-        nt.links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
-        nt.links.new(ramp.outputs["Color"], p.inputs["Roughness"])
+        lo = float(rn.get("low", max(0.0, r0 - 0.12)))
+        hi = float(rn.get("high", min(1.0, r0 + 0.12)))
+        tc, noise = nt.nodes.new("ShaderNodeTexCoord"), nt.nodes.new("ShaderNodeTexNoise")
+        noise.inputs["Scale"].default_value = float(rn.get("scale", 20.0))
+        if rn.get("detail") is not None:
+            noise.inputs["Detail"].default_value = float(rn["detail"])
+        coord = tc.outputs.get(str(get("texture_coordinates", "Object"))) or tc.outputs["Object"]
+        nt.links.new(coord, noise.inputs["Vector"])
+        if rn.get("via") == "map_range":
+            mr = nt.nodes.new("ShaderNodeMapRange")
+            mr.inputs["To Min"].default_value = lo
+            mr.inputs["To Max"].default_value = hi
+            nt.links.new(noise.outputs[0], mr.inputs["Value"])
+            nt.links.new(mr.outputs[0], p.inputs["Roughness"])
+        else:
+            ramp = nt.nodes.new("ShaderNodeValToRGB")
+            ramp.color_ramp.elements[0].color = (lo,) * 3 + (1.0,)
+            ramp.color_ramp.elements[1].color = (hi,) * 3 + (1.0,)
+            nt.links.new(noise.outputs[0], ramp.inputs[0])
+            nt.links.new(ramp.outputs[0], p.inputs["Roughness"])
     if "Normal" in proc and "Bevel" in proc["Normal"]:
         bev = nt.nodes.new("ShaderNodeBevel")
-        bev.inputs["Radius"].default_value = 0.002
+        bev.inputs["Radius"].default_value = float(rec.get("bevel_radius", 0.002))
         nt.links.new(bev.outputs["Normal"], p.inputs["Normal"])
     return m
 

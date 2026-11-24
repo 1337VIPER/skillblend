@@ -138,13 +138,20 @@ generic default (defaults.json)  <  measured (rules.py)  <  your answer (optiona
 
 `style.json` records which source each number came from.
 
-`SKILL.md` is laid out as:
+`SKILL.md` is kept short, because an assistant loads the whole file every time the skill triggers. With all 19 techniques measured it is under 100 lines and about 10,000 characters (the Agent Skills guide asks for under 500 lines and about 5,000 tokens). It is laid out as:
 
-1. the frontmatter (`name`, `description`), written so Claude Code loads the skill for modelling requests;
-2. **How this project is built**: every measured module's headline, numbered in workflow order (scripts, setup, structure, blockout, bevels, SubD, booleans, stacks, kit, materials, UVs, game-ready, vehicles);
-3. **How to work**: build models as scripts, use your helper kit if one was found, load `style.py`, run `style_check.py`, render review shots;
-4. the **style card**, a table of every number with its source;
-5. one section per module, marked *measured* or *generic*: the measured rules, then the summary from `generic.md`, then a link to `references/<module>.md` for the full method.
+1. the front matter (`name`, `description`), written so the assistant loads the skill for modelling requests. The description is quoted when it needs to be (a colon in your name, for example) and kept under the 1,024-character limit;
+2. **How this project is built**: one numbered line per technique in workflow order, marked *measured from N files* or *standard method*, with the module's headline and a link to its page;
+3. **How to work**: read `NOTES.md` if there is one, build models as scripts, use your helper kit if one was found, load `style.py`, run `style_check.py`, render review shots;
+4. **Key numbers**: the few dozen settings needed most often, with their source.
+
+Everything else is one hop away in `references/`:
+
+- `references/<module>.md`: every measured rule for that technique, the files it came from, then the full method from `generic.md`. `SKILL.md` tells the assistant to read the page before doing that kind of work;
+- `references/style-card.md`: every number with its source;
+- the kit catalogue, modifier dictionary and shader recipes, when your files gave them.
+
+`.skillblend.json` (the manifest) lists every file the build wrote, with a hash of each. Installs use it to tell SkillBlend's files from yours (section 9).
 
 The skill also gets `scripts/`:
 - `style.py`, `style_check.py`, `analyse_blend.py` and `doclib.py`;
@@ -180,16 +187,45 @@ This analyses the open file exactly as in step 2, then runs every `checks/*.py` 
 | `POST /api/build` | build the skill |
 | `POST /api/install` | install the skill |
 
-## 9. Other AI tools
+## 9. Installing, for any AI tool
 
-`forge/targets.py` turns a built skill into instructions other assistants read:
+A built skill is an [Agent Skills](https://agentskills.io) folder, the format Claude Code, OpenAI Codex, Cursor, Gemini CLI, GitHub Copilot and Windsurf all read. `forge/targets.py` puts it where each tool looks:
 
-- **Project tools** (Codex and other `AGENTS.md` tools, Cursor, Gemini CLI, Copilot, Windsurf). The skill's files are copied to `<project>/.skillblend/<name>/`. The skill text, with a header saying where those files are, goes into the tool's instruction file. Shared files (`AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`) get a block between `<!-- skillblend:<name>:start -->` and `<!-- skillblend:<name>:end -->`, which is replaced on reinstall. Cursor and Windsurf get their own rule files.
-- **Any chat model.** `system-prompt.md` is a compact, self-contained version (about 16k characters, so it fits small local models). It holds the overview, how to work, the style card, each measured part's rules, and a few standard rules where nothing was measured.
+| `--for` | Where it goes |
+|---|---|
+| `claude` | `~/.claude/skills/<name>/`, or `<project>/.claude/skills/<name>/` with `--scope project` |
+| `codex`, `cursor`, `gemini`, `copilot`, `windsurf` | one shared copy in `~/.agents/skills/<name>/`, or `<project>/.agents/skills/<name>/` when you give `--project-dir`. All five tools read `.agents/skills`, so naming any of them installs for all of them |
+| `agents-md` | a short pointer (a few lines) in `<project>/AGENTS.md`, between `<!-- skillblend:<name>:start -->` and `<!-- skillblend:<name>:end -->`, for tools that read `AGENTS.md` but not skills. It is replaced on reinstall, and the rest of the file is never touched |
+| `prompt` | `system-prompt.md`, a compact self-contained version for any chat model (about 16k characters, so it fits small local models): the overview, the style card, each measured part's rules, and a few standard rules where nothing was measured |
 
-Every build writes all of these formats to the skill's `exports/` folder.
+The pointer and the system prompt are also written to the skill's `exports/` folder with every build.
 
-## 10. Workspace layout
+SkillBlend 0.4 pasted the whole skill into `AGENTS.md`, `GEMINI.md` and the Copilot file, which those tools load in every session, and kept a copy in `<project>/.skillblend/`. Installing into such a project removes those blocks and rule files and moves the copy to `.agents/skills/`.
+
+**Updating never throws your work away.** Installing over an earlier copy (`--force`) goes file by file, using the manifest:
+
+- a file you added (not in the old manifest, not in the new build) stays where it is, and is listed under **Your additions** at the end of `SKILL.md`;
+- a section you wrote into `SKILL.md` moves to `NOTES.md`. Every skill tells the assistant to read `NOTES.md` first, and SkillBlend never changes it, so that is the place for your own rules;
+- a SkillBlend file you edited is copied to `workspace/backups/<name>-<date>/` before it is replaced;
+- a file an earlier build wrote that the new build doesn't is removed.
+
+A skill installed before the manifest existed (0.1 to 0.4) is handled the same way, with a backup of every text file that changes. `build --out` refuses a folder that holds anything SkillBlend didn't build, and refuses an installed skill.
+
+## 10. The eval
+
+`forge/evalkit.py` answers one question: does the skill change what an AI builds?
+
+- **Tasks.** `forge/eval/tasks.json` holds six small hard-surface prompts (`eval tasks` lists them; `--tasks FILE` uses your own). Each has an id, a prompt and the file name its model gets.
+- **Arms.** Every prompt is built twice. The "with" arm's folder has the skill installed in it (`.claude/skills/<name>` and `.agents/skills/<name>`, through the same installer as section 9); the "without" arm's folder has nothing. Both get the same prompt text, which is the task plus how to deliver it (work in this folder, save `model.blend`, where Blender is).
+- **Runners.** How a model gets built is a command line. It is split into words first and its placeholders (`{prompt}`, `{prompt_file}`, `{workdir}`, `{out}`, `{skill_dir}`, `{blender}`, `{arm}`, `{task}`) are filled in afterwards, so a prompt or a path with spaces stays one argument; the prompt is also piped to standard input. `--agent claude` and `--agent codex` are preset command lines written from those tools' `--help`. They are not exercised by the tests, since a run spends AI usage, and they only start with `--yes`. A runner that times out is stopped together with anything it started.
+- **Scoring.** Each model is opened headless with the skill's `scripts/style_check.py -- --json`. A model counts as built when the file exists, Blender opens it (the analysis must name that file, not Blender's start-up scene) and it holds at least one mesh. Warnings and notes are counted per model and per check.
+- **Totals.** Per arm: models built out of prompts given, warnings and notes per built model, models with no warnings. A model that wasn't built stays in the count of prompts. The headline gives both arms' warnings per model and the number of prompts, and the report adds that a handful of prompts is a direction, not a statistically reliable difference.
+- **Home-folder skills.** An assistant can load a skill from the home folder in either arm. SkillBlend only lists those folders (it never changes them), and when any exist and nothing has confirmed they were hidden from the "without" arm, the report carries a caveat saying the arm may have seen them. It also searches what each run left behind for mentions of a skill, as a rough cross-check.
+- **Score-only.** `eval score WITH_DIR WITHOUT_DIR --skill DIR` skips the runners and scores two folders of `.blend` files, matched by file name. `eval run` ends the same way: it collects each arm's models into `models/with` and `models/without` and scores those.
+
+A run is a folder, `workspace/eval/<run>/` (`--name`, or the date and time; a taken name gets `-2`, `-3`): one working folder per prompt and arm with its `PROMPT.md` and `runner.log`, `models/`, `scores/`, `report.md` and `report.json`.
+
+## 11. Workspace layout
 
 `workspace/` sits next to `skillblend.py` (set `FORGE_WORKSPACE` to move it) and is ignored by git:
 
@@ -202,4 +238,6 @@ workspace/
   uploads/           files dropped into the app
   submissions/       files submitted in the guided interview (and analysis/ for them)
   build/<skill>/     built skills
+  eval/<run>/        eval runs: working folders, models, scores, report.md and report.json
+  backups/           files you had edited in an installed skill, saved before an update replaced them
 ```

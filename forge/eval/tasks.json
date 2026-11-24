@@ -1,0 +1,41 @@
+{
+  "_about": "The prompts `python skillblend.py eval` gives an AI, once with your skill and once without. Each is a small hard-surface prop that takes a few minutes to model. `file` is the name its .blend gets in a run's models/ folders, and the name `eval score` matches on. Use your own set with --tasks FILE.",
+  "tasks": [
+    {
+      "id": "supply-crate",
+      "title": "Sci-fi supply crate",
+      "file": "supply-crate.blend",
+      "prompt": "Model a sci-fi supply crate as a game prop, about 0.8 m long, 0.5 m wide and 0.5 m tall. It has a separate lid, a handle on each short side, reinforced corners and at least one recessed panel or vent."
+    },
+    {
+      "id": "flashlight",
+      "title": "Handheld flashlight",
+      "file": "flashlight.blend",
+      "prompt": "Model a hard-surface handheld flashlight, about 16 cm long: a ribbed grip, a wider head with a lens, a tail cap and a switch on the side."
+    },
+    {
+      "id": "junction-box",
+      "title": "Electrical junction box",
+      "file": "junction-box.blend",
+      "prompt": "Model a wall-mounted electrical junction box, about 20 cm square and 8 cm deep: the body, a cover held on by four screws, two cable glands on the bottom and two mounting tabs."
+    },
+    {
+      "id": "field-radio",
+      "title": "Portable field radio",
+      "file": "field-radio.blend",
+      "prompt": "Model a portable field radio, about 30 cm wide: the main body, a front panel with two knobs, three switches and a display window, a carry handle on top and a short antenna."
+    },
+    {
+      "id": "vent-panel",
+      "title": "Wall vent panel",
+      "file": "vent-panel.blend",
+      "prompt": "Model a wall ventilation panel for a sci-fi corridor, about 60 cm by 40 cm and 5 cm deep: a frame, a grille of angled slats with real openings between them, and a bolt in each corner."
+    },
+    {
+      "id": "fuel-canister",
+      "title": "Fuel canister",
+      "file": "fuel-canister.blend",
+      "prompt": "Model a metal fuel canister (jerrycan), about 45 cm tall: the pressed body with ribs on its sides, a handle on top, a spout with a cap, and a small label plate."
+    }
+  ]
+}

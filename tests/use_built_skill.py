@@ -25,6 +25,18 @@ for ob in (body, knob):
     style.material(ob)
 print("STACK", [m.type for m in body.modifiers])
 print("BEVEL", round(body.modifiers["Bevel"].width, 5), body.modifiers["Bevel"].segments)
+# with measured tiers, every width style.bevel picks is one of them, and "small" / "large" are the ends of the ladder
+tiers = style.bevel_tiers()
+picked = [body.modifiers["Bevel"].width, knob.modifiers["Bevel"].width, style.bevel_width(body, "small"),
+          style.bevel_width(body, "medium"), style.bevel_width(body, "large"), style.bevel_width(body, 0.5)]
+if tiers:
+    on_ladder = all(any(abs(w - t) < 1e-7 for t in tiers) for w in picked)
+    ends = abs(picked[2] - tiers[0]) < 1e-7 and abs(picked[4] - tiers[-1]) < 1e-7
+else:
+    on_ladder, ends = True, picked[2] < picked[3] < picked[4]
+print("TIERS", [round(t, 5) for t in tiers], [round(w, 5) for w in picked])
+if on_ladder and ends and body.modifiers["Bevel"].miter_outer == (style.get("bevel_miter_outer") or "MITER_ARC"):
+    print("TIERS_OK")
 bpy.ops.wm.save_as_mainfile(filepath=good_path)
 
 # a careless version: default names, unscaled, a huge bevel, a rendering cutter
@@ -53,6 +65,11 @@ print("DEEP solidify", round(sw.thickness, 4))
 mat = style.material(part, "SteelDark")
 p = next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
 print("DEEP steel metallic", p.inputs["Metallic"].default_value, "roughness linked", p.inputs["Roughness"].is_linked)
+noise = next((n for n in mat.node_tree.nodes if n.type == "TEX_NOISE"), None)
+ramp = next((n for n in mat.node_tree.nodes if n.type == "VALTORGB"), None)
+if noise and ramp:
+    print("DEEP noise", round(noise.inputs["Scale"].default_value, 3),
+          round(ramp.color_ramp.elements[0].color[0], 3), round(ramp.color_ramp.elements[1].color[0], 3))
 sc = style.setup_render()
 print("DEEP render", sc.render.engine, sc.view_settings.view_transform, sc.world is not None)
 print("DEEP_OK")

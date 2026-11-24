@@ -140,6 +140,13 @@ def rules(ctx):
                 own[k][sig] += 1
         if own:
             rec["procedural"] = {k: L.chain_name(c.most_common(1)[0][0]) for k, c in own.items()}
+            noise = _roughness_noise(ms, L)
+            if noise:
+                rec["roughness_noise"] = noise
+            radii = [n["inputs"]["Radius"] for x in ms for n in L.tree_nodes(x.get("tree"))
+                     if n.get("type") == "BEVEL" and isinstance((n.get("inputs") or {}).get("Radius"), (int, float))]
+            if radii and "BEVEL" in "".join(own.get("Normal", {})):
+                rec["bevel_radius"] = round(L.median(radii), 5)
         for k, dv in (("alpha", 1.0), ("ior", 1.5), ("emission_strength", 0.0), ("transmission", 0.0)):
             if k in rec and abs(rec[k] - dv) < 1e-3:
                 del rec[k]
@@ -169,6 +176,43 @@ def rules(ctx):
     return r
 
 
+def _roughness_noise(ms, L):
+    """The Noise break-up that feeds Roughness, as the artist set it: noise scale and detail, and the roughness
+    range the Color Ramp or Map Range after it maps to (medians over the materials of one name)."""
+    num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
+    scale, detail, lo, hi, via = [], [], [], [], Counter()
+    for x in ms:
+        sig = ((x.get("principled") or {}).get("linked") or {}).get("Roughness", "")
+        if "TEX_NOISE" not in sig:
+            continue
+        for n in L.tree_nodes(x.get("tree")):
+            inp = n.get("inputs") or {}
+            if n.get("type") == "TEX_NOISE":
+                if num(inp.get("Scale")):
+                    scale.append(inp["Scale"])
+                if num(inp.get("Detail")):
+                    detail.append(inp["Detail"])
+            elif n.get("type") == "VALTORGB" and "VALTORGB" in sig and n.get("stops"):
+                vals = [sum(c[:3]) / 3 for _, c in n["stops"] if c and all(num(v) for v in c[:3])]
+                if len(vals) >= 2:
+                    lo.append(min(vals))
+                    hi.append(max(vals))
+                    via["ramp"] += 1
+            elif n.get("type") == "MAP_RANGE" and "MAP_RANGE" in sig and num(inp.get("To Min")) and num(inp.get("To Max")):
+                lo.append(min(inp["To Min"], inp["To Max"]))
+                hi.append(max(inp["To Min"], inp["To Max"]))
+                via["map_range"] += 1
+    if not scale:
+        return None
+    out = {"scale": round(L.median(scale), 3)}
+    if detail:
+        out["detail"] = round(L.median(detail), 3)
+    if lo and hi:
+        out.update(low=round(max(0.0, min(1.0, L.median(lo))), 4), high=round(max(0.0, min(1.0, L.median(hi))), 4),
+                   via=via.most_common(1)[0][0])
+    return out
+
+
 def recipes_md(recipes, L):
     rows = ["# Shader recipes", "", "Measured Principled BSDF values per material name (median over files). "
             "`style.material(obj, name)` rebuilds a material from this table.", "",
@@ -176,6 +220,11 @@ def recipes_md(recipes, L):
     for name, v in recipes.items():
         other = ", ".join(f"{k} {v[k]}" for k in ("emission_strength", "alpha", "ior", "transmission") if k in v)
         proc = "; ".join(f"{k}: {c}" for k, c in (v.get("procedural") or {}).items())
+        rn = v.get("roughness_noise")
+        if rn:
+            proc += f" (noise scale {rn['scale']}" + (f", roughness {rn['low']} to {rn['high']}" if "low" in rn else "") + ")"
+        if "bevel_radius" in v:
+            proc += f" (bevel radius {v['bevel_radius'] * 1000:.3g} mm)"
         rows.append(f"| `{name}` | {v.get('base_color', '')} | {v.get('metallic', '')} | {v.get('roughness', '')} | {other} | {proc} |")
     return "\n".join(rows) + "\n"
 

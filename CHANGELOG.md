@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+A short skill, one install for every tool, and updates that keep your work.
+
+- **A short `SKILL.md`.** With every technique measured it was 558 lines and 47,000 characters, all loaded each time the skill triggered. It's now under 100 lines and about 10,000 characters: one line per technique in the order the work happens, how to work, and the key numbers. Each technique's measured rules and full method are in its own page in `references/`, read when that work comes up, and the full style card is `references/style-card.md`.
+- **One install for every tool.** A built skill is an Agent Skills folder. `install --for codex` (or `cursor`, `gemini`, `copilot`, `windsurf`) puts one shared copy in `.agents/skills`, which all five read: in your home folder, or in one project with `--project-dir`. 0.4 pasted the whole skill into `AGENTS.md`, `GEMINI.md` and the Copilot file, which those tools load in every session; installing into such a project now removes those blocks and rule files and moves the `.skillblend/` copy across. `--for agents-md` adds a few lines to `AGENTS.md` for tools that don't read skills.
+- **Updates keep your work.** `install --force` used to delete the installed skill and copy the new one. It now updates file by file: files you added stay and are listed in `SKILL.md`, sections you wrote into `SKILL.md` move to `NOTES.md` (which every skill tells the AI to read first, and SkillBlend never changes), and SkillBlend files you edited are saved to `workspace/backups/` first. Skills installed by 0.1 to 0.4 are updated the same way.
+- **Fixed: `build --out` deleted whatever folder it was given.** It now replaces only a folder an earlier build made, and refuses one that holds anything else or is an installed skill.
+- **Fixed: a colon in the author name broke the skill.** A name like "Studio: Nine" made `SKILL.md`'s front matter invalid YAML, so the skill didn't load. The description is now quoted when it needs to be and kept under the 1,024-character limit.
+- **`style.bevel()` uses your tiers.** Widths snap to your measured bevel tiers instead of a new width per part, `tier="small"`, `"medium"` or `"large"` picks one by the edge's role, and the outer miter is the one you use (it was always Arc).
+- **`style.material()` rebuilds your own break-up.** The noise scale, the roughness range and the shader-bevel radius are measured per material; they were fixed values before.
+- **An eval: does the skill change what an AI builds?** `eval score WITH_DIR WITHOUT_DIR --skill DIR` scores two folders of models against the skill with its own `style_check.py` and reports warnings per model for each, with a model that wasn't built counted rather than dropped. `eval run --agent claude|codex` (or `--runner "your command"`) has an AI build six prompts with and without the skill first, each in its own folder. The agent presets are best-effort command lines that the tests have not run, a real run spends your AI usage and needs `--yes`, and the report says so when the "without" arm may have seen skills from your home folder.
+- Tests that need no Blender (`python -m unittest discover -s tests -p "test_*.py"`), and a GitHub Actions workflow that runs them on Windows, macOS and Linux and the end-to-end suite on Blender 4.2 LTS, 4.5 LTS, 5.0 and 5.3.
+- The driver skill and `AGENTS.md` no longer state a module count that goes stale.
+- **Works with [Refine3D](https://github.com/1337VIPER/refine3d)**, a review harness for Blender models: it can run your skill's style check on every version of a model and pin what is off-style.
+
 ## 0.4.0 (2026-11-11)
 
 Characters, sculpting, and skills for any AI.

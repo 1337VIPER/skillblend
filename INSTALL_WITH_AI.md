@@ -15,8 +15,9 @@ Install SkillBlend (https://github.com/1337VIPER/skillblend) and use it to learn
 5. Run "python skillblend.py report" and explain to me, in plain language, what it learned about how I model. Point out anything that looks off, and ask whether I want to leave any file out.
 6. Ask me three things: what to call my skill, whether my kitbash pieces are my own work (if yes, run: python skillblend.py answer kit-library kit_redistribute true), and whether to copy my .blend files into the skill so you can study them (if yes, add --examples). Then build it:
    python skillblend.py build --name "<name>" [--examples]
-7. Install it for the assistant I'm using, with --for set to yourself: claude (Claude Code), codex (OpenAI Codex and other AGENTS.md tools), cursor, gemini (Gemini CLI), copilot or windsurf. For anything but Claude Code, ask me for the project folder I work in:
+7. Install it for the assistant I'm using, with --for set to yourself: claude (Claude Code), codex (OpenAI Codex), cursor, gemini (Gemini CLI), copilot or windsurf. Ask me whether I want it in every project or only one; for only one, add --project-dir:
    python skillblend.py install "<the folder the build printed>" --for <you> [--project-dir "<project>"]
+   If it says the skill is already installed, ask me first, then add --force: that updates it and keeps anything I added to it.
    If I use a plain chat model (ChatGPT, a local model in Ollama or LM Studio), give me exports/system-prompt.md from the built folder to paste in as the system prompt.
 8. Tell me to start a new session, and give me two example prompts to try my new skill.
 

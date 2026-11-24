@@ -9,7 +9,6 @@ import json
 import os
 import re
 import secrets
-import shutil
 import string
 import threading
 import time
@@ -109,30 +108,33 @@ class App:
         return res
 
     def install(self, body):
-        """Install for Claude Code (skills folder) and/or other AI tools (instruction files in a project)."""
-        from .targets import install_targets
+        """Install for Claude Code (its skills folder) and/or the shared `.agents/skills` folder other tools read."""
+        from .targets import canonical, describe, install_skill, skill_dirs
         src = (self.last_build or {}).get("dir")
         if not src or not os.path.isfile(os.path.join(src, "SKILL.md")):
             raise RuntimeError("Make the skill first.")
-        tools = body.get("targets") or ["claude"]
-        done = {}
-        if "claude" in tools:
-            dst = os.path.join(os.path.expanduser("~"), ".claude", "skills", os.path.basename(src))
-            if os.path.exists(dst):
-                if not body.get("replace"):
-                    return {"exists": True, "path": dst}
-                shutil.rmtree(dst)
-            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("exports"))
-            self.last_build["installed_at"] = dst
-            done["claude"] = dst
-        others = [t for t in tools if t != "claude"]
-        if others:
-            pd = body.get("project_dir") or None
-            if any(t != "prompt" for t in others):
-                if not pd or not os.path.isdir(pd):
-                    raise RuntimeError("Choose the project folder your AI tool works in.")
-            done.update(install_targets(src, others, pd))
-        return {"installed": True, "done": done}
+        tools = canonical(body.get("targets") or ["claude"])
+        pd = (body.get("project_dir") or "").strip() or None
+        if pd and not os.path.isdir(pd):
+            raise RuntimeError("That project folder doesn't exist.")
+        if "agents-md" in tools and not pd:
+            raise RuntimeError("Choose the project folder whose AGENTS.md should point at the skill.")
+        if not body.get("replace"):
+            there = [d for d in skill_dirs(src, tools, "user", pd).values() if os.path.isdir(d) and os.listdir(d)]
+            if there:
+                return {"exists": True, "path": there[0]}
+        try:
+            reps = install_skill(src, tools, "user", pd, backup_root=os.path.join(self.ws.root, "backups"))
+        except ValueError as exc:
+            raise RuntimeError(str(exc))
+        if "claude" in reps:
+            self.last_build["installed_at"] = reps["claude"]["path"]
+        notes = []
+        for rep in reps.values():
+            for line in describe(rep):
+                if line not in notes:
+                    notes.append(line)
+        return {"installed": True, "done": {t: rep["path"] for t, rep in reps.items()}, "notes": notes}
 
     def prompt(self):
         from .targets import system_prompt

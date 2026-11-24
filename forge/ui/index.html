@@ -544,8 +544,9 @@ async function build(generic){
 }
 $("buildBtn").onclick = () => build(false);
 
-const TARGETS = [["claude", "Claude Code", "skills folder, loads by itself"], ["codex", "Codex and AGENTS.md tools", "OpenAI Codex, Jules, Amp, OpenCode, Zed..."],
-  ["cursor", "Cursor", "a project rule"], ["gemini", "Gemini CLI", "GEMINI.md"], ["copilot", "GitHub Copilot", "copilot-instructions.md"], ["windsurf", "Windsurf", "a project rule"]];
+const TARGETS = [["claude", "Claude Code", "its skills folder, loads by itself"],
+  ["agents", "Codex, Cursor, Gemini CLI, Copilot, Windsurf", "one shared skills folder they all read"],
+  ["agents-md", "A note in AGENTS.md", "for tools that read AGENTS.md but not skills"]];
 const chosen = () => [...document.querySelectorAll(".tgt input:checked")].map(x => x.value);
 const TRY = ["Model a sci-fi supply crate the way I do.", "Make a hard-surface flashlight prop, game-ready, in my style.", "Check this model against my style: <path to .blend>"];
 function showBuild(r){
@@ -556,8 +557,8 @@ function showBuild(r){
     <div class="targets">
       ${TARGETS.map(([id, label, sub]) => `<label class="tgt"><input type="checkbox" value="${id}" ${id === "claude" ? "checked" : ""}><div><b>${label}</b><span>${sub}</span></div></label>`).join("")}
     </div>
-    <div id="projRow" class="row hidden" style="margin-top:8px"><input type="text" id="projDir" placeholder="The project folder your AI tool works in, e.g. D:\\Art\\MyGame" style="flex:1"></div>
-    <div class="row" style="margin-top:12px"><button class="primary" id="instBtn">Install</button><button id="promptBtn">Copy a system prompt for any chat model</button><span class="small muted" id="instOut">${r.installed_at ? "An earlier version is installed in Claude Code; installing replaces it." : ""}</span></div>
+    <div id="projRow" class="row hidden" style="margin-top:8px"><input type="text" id="projDir" placeholder="Optional: a project folder, to install it for that project only (e.g. D:\\Art\\MyGame). Leave empty to use it everywhere." style="flex:1"></div>
+    <div class="row" style="margin-top:12px"><button class="primary" id="instBtn">Install</button><button id="promptBtn">Copy a system prompt for any chat model</button><span class="small muted" id="instOut">${r.installed_at ? "An earlier version is installed in Claude Code. Installing updates it and keeps anything you added to it." : ""}</span></div>
     <div id="tryBox" class="${r.installed_at ? "" : "hidden"}"></div>
     <details style="margin-top:12px"><summary>Where the files are</summary><div class="mono small muted">${esc(r.dir)}</div></details></div>`;
   const sync = () => $("projRow").classList.toggle("hidden", !chosen().some(t => t !== "claude"));
@@ -574,7 +575,7 @@ function showTry(name){
   $("tryBox").classList.remove("hidden");
   $("tryBox").innerHTML = `<div class="try"><b>Try it.</b> Start a new session in your AI tool and ask:
     ${TRY.map((t, i) => `<div class="prompt"><q>${esc(t)}</q><button data-i="${i}">Copy</button></div>`).join("")}
-    <span class="small muted">Claude Code loads <span class="mono">${esc(name)}</span> by itself; the other tools read the instruction files in your project.</span></div>`;
+    <span class="small muted">Your AI tool loads <span class="mono">${esc(name)}</span> by itself when you ask for Blender work. To add rules of your own, write them in a <span class="mono">NOTES.md</span> file inside the installed skill folder: SkillBlend never changes it.</span></div>`;
   $("tryBox").querySelectorAll("button[data-i]").forEach(b => b.onclick = async () => {
     try { await navigator.clipboard.writeText(TRY[+b.dataset.i]); b.textContent = "Copied"; } catch (e) { b.textContent = "Select and copy"; }
     setTimeout(() => b.textContent = "Copy", 1500);
@@ -586,11 +587,11 @@ async function install(replace){
     if (!targets.length) { $("instOut").textContent = "Pick at least one AI tool."; return; }
     const r = await api("/api/install", {replace, targets, project_dir: ($("projDir").value || "").trim().replace(/^"|"$/g, "")});
     if (r.exists && !replace) {
-      if (confirm(`A skill with this name is already installed:\n${r.path}\n\nReplace it with this new version?`)) return install(true);
+      if (confirm(`A skill with this name is already installed:\n${r.path}\n\nUpdate it with this new version?\nFiles you added there are kept, and anything you edited is backed up first.`)) return install(true);
       return;
     }
     const where = Object.entries(r.done || {}).map(([t, p]) => `${(TARGETS.find(x => x[0] === t) || [t, t])[1]}: <span class="mono">${esc(p)}</span>`).join("<br>");
-    $("instOut").innerHTML = `Installed.<br>${where}`;
+    $("instOut").innerHTML = `Installed.<br>${where}` + (r.notes || []).map(n => `<br>${esc(n)}`).join("");
     showTry(S.last_build.name);
   } catch (e) { $("instOut").textContent = e.message; }
 }

@@ -7,6 +7,7 @@
   "bevel_profile": 0.7,
   "bevel_harden_normals": false,
   "bevel_clamp": false,
+  "bevel_miter_outer": "MITER_ARC",
   "weighted_normal": true,
   "weighted_normal_keep_sharp": true,
   "smooth_angle_deg": 30,
