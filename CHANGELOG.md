@@ -20,6 +20,7 @@ A short skill, one install for every tool, and updates that keep your work.
 - **`scripts/review_shot.py` in every skill,** and the skill now tells the AI to render its model and look at it before calling it done. The style check can't see a missing part.
 - **The eval report shows the models:** a picture of every model, all drawn the same way, with part, triangle and coloured-material counts next to the score.
 - `style.name()` handles the `Mixed_underscore` naming case.
+- **Fixed: the driver skill's description never loaded.** It had a colon in it, which made its front matter invalid, and it was over the 1,024-character limit, so Claude Code listed the skill by its heading only and had little to go on for when to use it.
 - `eval run --model M` pins both arms of an `--agent` preset to one model (without it the two arms ran on different models). The Claude Code preset's isolation was checked on Claude Code 2.1.319 and the preset has now been run for real.
 - **Works with [Refine3D](https://github.com/1337VIPER/refine3d)**, a review harness for Blender models: it can run your skill's style check on every version of a model and pin what is off-style.
 

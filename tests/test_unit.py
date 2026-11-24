@@ -278,6 +278,23 @@ class Helpers(Temp):
             self.assertIn(m["title"], T.LEGACY_HEADINGS | {m["title"]})
             json.dumps(m["defaults"])
 
+    def test_driver_skill_front_matter_is_valid(self):
+        text = read(os.path.join(REPO, "driver-skill", "SKILL.md"))
+        meta, _ = T.parse_skill(text)
+        desc = meta.get("description", "")
+        self.assertEqual(meta.get("name"), "skillblend")
+        self.assertTrue(0 < len(desc) <= 1024, len(desc))          # the Agent Skills limit
+        line = next(l for l in text.splitlines() if l.startswith("description:"))[len("description: "):]
+        if not line.startswith('"'):                                 # a plain YAML value can't hold these
+            self.assertNotIn(": ", line)
+            self.assertNotIn(" #", line)
+        try:
+            import yaml
+        except ImportError:
+            return
+        fm = yaml.safe_load(text.split("---")[1])
+        self.assertEqual(fm["description"], desc)
+
     def test_docs_do_not_hard_code_the_module_count(self):
         import re
         for rel in ("AGENTS.md", os.path.join("driver-skill", "SKILL.md")):
