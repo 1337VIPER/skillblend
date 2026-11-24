@@ -11,6 +11,7 @@ before it calls a model done. A run lives in ``<workspace>/eval/<run>/`` and is 
     <task>/<arm>/      one working folder per prompt and arm ("with" has the skill installed in it, "without" not)
     models/<arm>/      the models that were built, named after their task
     scores/<arm>/      each model's findings
+    pictures/<arm>/    one picture of each model, all rendered the same way
     report.md, report.json
 
 Standard library only. Nothing here starts an AI unless you run ``eval run`` yourself.
@@ -31,7 +32,7 @@ from .targets import install_skill, parse_skill, read_manifest
 TASKS_FILE = os.path.join(paths.PKG, "eval", "tasks.json")
 ARMS = ("with", "without")
 MODEL_NAME = "model.blend"
-RESERVED = {"models", "scores", "backups"}  # folder names a run uses; a task id can't be one of them
+RESERVED = {"models", "scores", "backups", "pictures"}  # folder names a run uses; a task id can't be one of them
 # where assistants look for skills in a home folder (listed read-only, to say whether the "without" arm could see one)
 HOME_SKILL_DIRS = (".claude/skills", ".agents/skills", ".codex/skills", ".gemini/skills", ".cursor/skills", ".copilot/skills")
 TEXT_EXT = (".py", ".md", ".txt", ".json", ".jsonl", ".log", ".toml", ".yaml", ".yml")
@@ -47,14 +48,17 @@ PRESETS = {
     "claude": {
         "label": "Claude Code (headless)",
         "with": 'claude -p --output-format json --no-session-persistence --permission-mode acceptEdits '
-                '--allowedTools Bash,PowerShell,Read,Write,Edit,Glob,Grep,Skill --setting-sources project',
+                '--allowedTools Bash,PowerShell,Read,Write,Edit,Glob,Grep,Skill --setting-sources project '
+                '--strict-mcp-config',
         "without": 'claude -p --output-format json --no-session-persistence --permission-mode acceptEdits '
                    '--allowedTools Bash,PowerShell,Read,Write,Edit,Glob,Grep --safe-mode',
         "isolation": "flag",
-        "isolation_note": "the without arm is started with --safe-mode, which Claude Code's help describes as starting "
-                          "with CLAUDE.md, skills, plugins, hooks and MCP servers disabled",
+        "isolation_note": "the without arm is started with --safe-mode, which hid every home-folder skill when it was "
+                          "checked on Claude Code 2.1.319 (the with arm, with --setting-sources project, saw only the "
+                          "skill installed in its run folder)",
         "home": ("~/.claude/skills",),
         "version": ["claude", "--version"],
+        "model_flag": "--model",
     },
     "codex": {
         "label": "OpenAI Codex (exec)",
@@ -64,6 +68,7 @@ PRESETS = {
         "isolation_note": "Codex has no switch SkillBlend knows of that hides the skills in your home folder",
         "home": ("~/.agents/skills", "~/.codex/skills"),
         "version": ["codex", "--version"],
+        "model_flag": "--model",
     },
 }
 
@@ -241,10 +246,42 @@ def skill_signs(workdir, names, also=()):
 
 
 # ------------------------------------------------------------------ scoring
+GREY = 0.8  # Blender's default Base Color and viewport colour
+
+
+def _blank_material(m):
+    """A material nobody set up: Blender's default grey, no metal, nothing plugged into the colour."""
+    near = lambda c: c is not None and all(abs(float(x) - GREY) < 0.005 for x in list(c)[:3])
+    pr = m.get("principled")
+    if m.get("use_nodes") and pr:
+        vals, linked = pr.get("values") or {}, pr.get("linked") or {}
+        return ("Base Color" not in linked and near(vals.get("Base Color")) and not float(vals.get("Metallic") or 0)
+                and not float(vals.get("Emission Strength") or 0) and not float(vals.get("Transmission Weight") or 0))
+    if m.get("use_nodes"):
+        return False
+    return near((m.get("viewport") or {}).get("color"))
+
+
+def look(an):
+    """What the style check doesn't score: how much there is to the model, and whether its materials have colours.
+    Parts leave out helpers (boolean cutters, wire or bounds display, hidden from render)."""
+    objs = [o for o in an.get("objects", []) if o.get("type") == "MESH" and not o.get("outside_scene") and "error" not in o]
+    cutters = {m.get("object") for o in objs for m in o.get("modifiers", []) if m.get("type") == "BOOLEAN" and m.get("object")}
+    parts = [o for o in objs if o.get("name") not in cutters and o.get("display_type") not in ("WIRE", "BOUNDS") and not o.get("hide_render")]
+    strip = lambda n: re.sub(r"\.\d{3,}$", "", n)
+    used = {strip(m) for o in parts for m in (o.get("materials") or []) if m}
+    mats = {strip(m["name"]): m for m in an.get("materials", [])}
+    blank = sorted(n for n in used if n in mats and _blank_material(mats[n]))
+    return {"parts": len(parts),
+            "tris": sum(int((o.get("mesh") or {}).get("eval_tri_count") or (o.get("mesh") or {}).get("tri_count") or 0) for o in parts),
+            "materials": len(used), "coloured": len(used) - len(blank), "blank": blank,
+            "no_material": sum(1 for o in parts if not any(o.get("materials") or []))}
+
+
 def summarise(model_path, doc, exists=True, detail=""):
     """One model's score from what style_check.py --json wrote (`doc`, or None when it wrote nothing)."""
     row = {"file": os.path.basename(model_path), "built": False, "why": "", "warnings": 0, "notes": 0, "style_ok": False,
-           "meshes": 0, "tris": 0, "modules": {}, "findings": []}
+           "meshes": 0, "tris": 0, "modules": {}, "findings": [], "look": None, "picture": None}
     if not exists:
         row["why"] = "no model file"
         return row
@@ -262,6 +299,7 @@ def summarise(model_path, doc, exists=True, detail=""):
         row["why"] = "the file has no mesh in it"
         return row
     row["built"] = True
+    row["look"] = look(an)
     for f in doc.get("findings", []):
         sev = "warnings" if f.get("severity") in ("warn", "error") else "notes"
         row[sev] += 1
@@ -303,6 +341,20 @@ def score_model(blender, skill_dir, model_path, out_json, timeout=900):
     return row
 
 
+def picture(blender, model_path, out_png, timeout=300):
+    """One picture of a model for the report: every model from the same angle, in the same light. True when made."""
+    os.makedirs(os.path.dirname(out_png), exist_ok=True)
+    if os.path.isfile(out_png):
+        os.remove(out_png)
+    try:
+        subprocess.run([blender, "-b", "--factory-startup", model_path, "--python",
+                        os.path.join(paths.BLENDER, "eval_thumb.py"), "--", out_png],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+    except (subprocess.TimeoutExpired, OSError):
+        return False
+    return os.path.isfile(out_png)
+
+
 def aggregate(rows):
     """One arm's totals. A model that wasn't built stays in the count of prompts; the per-model means are over the
     models that were built."""
@@ -316,9 +368,13 @@ def aggregate(rows):
             m["notes"] += c["notes"]
     for m in mods.values():
         m["warnings_per_model"] = round(m["warnings"] / len(built), 2)
+    looks = [r["look"] for r in built if r.get("look")]
+    lmean = (lambda k: round(sum(x[k] for x in looks) / len(looks), 1)) if looks else (lambda k: None)
     return {"prompts": len(rows), "built": len(built), "warnings_per_model": mean("warnings"), "notes_per_model": mean("notes"),
             "no_warnings": sum(1 for r in built if r["warnings"] == 0), "style_ok": sum(1 for r in built if r["style_ok"]),
-            "modules": dict(sorted(mods.items()))}
+            "modules": dict(sorted(mods.items())),
+            "parts_per_model": lmean("parts"), "tris_per_model": lmean("tris"),
+            "materials": sum(x["materials"] for x in looks), "coloured": sum(x["coloured"] for x in looks)}
 
 
 def paired(with_rows, without_rows):
@@ -402,7 +458,13 @@ def render_report(doc):
           f"| Warnings per built model | {_num(w['warnings_per_model'])} | {_num(wo['warnings_per_model'])} |",
           f"| Notes per built model | {_num(w['notes_per_model'])} | {_num(wo['notes_per_model'])} |",
           f"| Models with no warnings | {w['no_warnings']} of {n} | {wo['no_warnings']} of {n} |",
-          f"| Models with nothing to report (`STYLE ok`) | {w['style_ok']} of {n} | {wo['style_ok']} of {n} |"]
+          f"| Models with nothing to report (`STYLE ok`) | {w['style_ok']} of {n} | {wo['style_ok']} of {n} |",
+          f"| Parts per built model | {_num(w.get('parts_per_model'))} | {_num(wo.get('parts_per_model'))} |",
+          f"| Triangles per built model | {_num(w.get('tris_per_model'))} | {_num(wo.get('tris_per_model'))} |",
+          f"| Materials given a colour | {w.get('coloured', 0)} of {w.get('materials', 0)} | {wo.get('coloured', 0)} of {wo.get('materials', 0)} |",
+          "", "The warnings say how closely a model follows the style. They don't say how much detail it has, whether it "
+          "matches the prompt, or how it looks. The last three rows and the pictures below are there for that: read "
+          "them together with the score."]
     p = S["paired"]
     if p["both_built"]:
         L += ["", f"Prompt by prompt, on the {p['both_built']} that both arms built: the skill's model had fewer warnings on "
@@ -411,6 +473,20 @@ def render_report(doc):
     cell = lambda r: f"{r['warnings']} / {r['notes']}" if r["built"] else f"not built ({r['why']})"
     for t, a, b in zip(doc["tasks"], doc["models"]["with"], doc["models"]["without"]):
         L.append(f"| {t['title']} (`{t['file']}`) | {cell(a)} | {cell(b)} |")
+    L += ["", "## The models", "", "Every model is drawn the same way: the same angle, the same light, its own material colours.", ""]
+
+    def facts(r):
+        if not r["built"]:
+            return f"not built ({r['why']})"
+        k = r.get("look") or {}
+        return (f"{k.get('parts', 0)} parts, {k.get('tris', 0):,} triangles, {k.get('coloured', 0)} of {k.get('materials', 0)} "
+                f"materials given a colour; {r['warnings']} warning{'' if r['warnings'] == 1 else 's'}, "
+                f"{r['notes']} note{'' if r['notes'] == 1 else 's'}")
+    pic = lambda r, alt: f"![{alt}]({r['picture']})" if r.get("picture") else "(no picture)"
+    for t, a, b in zip(doc["tasks"], doc["models"]["with"], doc["models"]["without"]):
+        L += [f"### {t['title']}", "", "| Without the skill | With the skill |", "|---|---|",
+              f"| {pic(b, t['title'] + ', without the skill')} | {pic(a, t['title'] + ', with the skill')} |",
+              f"| {facts(b)} | {facts(a)} |", ""]
     mods = sorted(m for m in set(w["modules"]) | set(wo["modules"])
                   if w["modules"].get(m, {}).get("warnings") or wo["modules"].get(m, {}).get("warnings"))
     if mods:
@@ -489,6 +565,10 @@ def score_dirs(blender, skill, tasks, with_dir, without_dir, run_dir, log=None):
         for t in tasks:
             row = score_model(blender, skill["dir"], os.path.join(d, t["file"]),
                               os.path.join(run_dir, "scores", arm, os.path.splitext(t["file"])[0] + ".json"))
+            if row["built"]:
+                rel = "pictures/%s/%s.png" % (arm, os.path.splitext(t["file"])[0])
+                if picture(blender, os.path.join(d, t["file"]), os.path.join(run_dir, *rel.split("/"))):
+                    row["picture"] = rel
             rows.append(row)
             if log:
                 log(f"  {arm:<8} {t['file']:<28} " + (f"{row['warnings']} warning(s), {row['notes']} note(s)" if row["built"] else f"not built: {row['why']}"))
@@ -546,9 +626,13 @@ def score_only(ws, skill_dir, with_dir, without_dir, name=None, tasks_file=None,
     return finish(run_dir, doc, models)
 
 
-def resolve_runner(agent=None, runner=None, runner_without=None, isolated=False):
-    """The command for each arm, and what is known about hiding home-folder skills from the "without" arm."""
+def resolve_runner(agent=None, runner=None, runner_without=None, isolated=False, model=None):
+    """The command for each arm, and what is known about hiding home-folder skills from the "without" arm.
+    `model` pins both arms of a preset to one model, so the comparison isn't between two models."""
     if runner:
+        if model:
+            raise ValueError("--model works with the --agent presets. With --runner, put the model in your own command "
+                             "(the same one in both arms).")
         return {"preset": None, "label": "your command (--runner)", "with": runner, "without": runner_without or runner,
                 "isolation": "confirmed" if isolated else "unknown",
                 "isolation_note": "you confirmed with --isolated that your command hides home-folder skills from the without arm"
@@ -557,9 +641,10 @@ def resolve_runner(agent=None, runner=None, runner_without=None, isolated=False)
     if agent not in PRESETS:
         raise ValueError(f"Choose --agent {' or '.join(PRESETS)}, or give your own command with --runner.")
     p = PRESETS[agent]
-    return {"preset": agent, "label": p["label"], "with": p["with"], "without": runner_without or p["without"],
+    pin = f' {p["model_flag"]} {model}' if model else ""
+    return {"preset": agent, "label": p["label"], "with": p["with"] + pin, "without": runner_without or (p["without"] + pin),
             "isolation": "confirmed" if isolated else p["isolation"], "isolation_note": p["isolation_note"],
-            "version_cmd": p["version"], "home_dirs": p["home"]}
+            "version_cmd": p["version"], "home_dirs": p["home"], "model": model or None}
 
 
 def isolation_caveat(rn, home):
@@ -573,7 +658,7 @@ def isolation_caveat(rn, home):
     folders = f"{count} skill folder{'s exist' if count != 1 else ' exists'}"
     if rn["isolation"] == "flag":
         return (f"The without arm may have seen user-level skills. {folders} in the home folder ({where}). To hide them, "
-                f"{rn['isolation_note']}; SkillBlend has not verified that on a real run. If the without arm used one of "
+                f"{rn['isolation_note']}; SkillBlend has not verified that for your version of the tool. If the without arm used one of "
                 "them, its score is better than a bare AI's and the difference above is understated.")
     why = (f"and nothing hid them: {rn['isolation_note']}" if rn["isolation"] == "none" else
            f"and {rn['isolation_note']}")
@@ -676,13 +761,17 @@ def run_eval(ws, skill_dir, rn, tasks, name=None, timeout=1800, jobs=1, name_ski
         except Exception:
             version = ""
     caveats = [c for c in [isolation_caveat(rn, hs)] if c]
+    if rn.get("preset") and not rn.get("model"):
+        caveats.append("No model was pinned (--model). The two arms can end up on different models, because they load "
+                       "different settings, and then the difference above is partly the models'. Check `runner.log` in "
+                       "each run folder, or run again with --model.")
     if hits:
         caveats.append("What the without arm left behind mentions a skill in " + ", ".join(sorted(hits)) + ". Look at those runs' "
                        "`runner.log` before trusting their scores.")
     doc = {"run": os.path.basename(run_dir), "dir": run_dir, "mode": "run", "date": time.strftime("%Y-%m-%d %H:%M"),
            "skillblend": __version__, "blender": blender_version(blender), "skill": skill, "tasks": tasks,
            "runner": {"preset": rn["preset"], "label": rn["label"], "with": rn["with"], "without": rn["without"],
-                      "isolation": rn["isolation"], "version": version},
+                      "isolation": rn["isolation"], "version": version, "model": rn.get("model")},
            "timeout": timeout, "name_skill": bool(name_skill), "runs": runs, "caveats": caveats,
            "signs": {"with_used": used, "with_runs": sum(1 for r in runs if r["arm"] == "with"), "without_hits": hits},
            "home_skills": {k: len(v) for k, v in hs.items()}}
@@ -712,6 +801,7 @@ def add_parser(sp, handler):
     r.add_argument("--runner-without", help="a different command for the without arm (default: the same as --runner)")
     r.add_argument("--isolated", action="store_true",
                    help="you have checked that the runner hides the skills in your home folder from the without arm (drops that caveat from the report)")
+    r.add_argument("--model", help="with --agent: the model both arms must use (recommended: without it the two arms can run on different models)")
     r.add_argument("--tasks", help="your own tasks file (JSON)")
     r.add_argument("--only", help="comma-separated task ids")
     r.add_argument("--timeout", type=int, default=1800, help="seconds allowed per prompt and arm (default 1800)")
@@ -782,7 +872,7 @@ def main(ws, a):
         # run
         if not a.runner and not a.agent:
             raise ValueError("Say how to build the models: --agent claude | codex, or your own command with --runner.")
-        rn = resolve_runner(a.agent, a.runner, a.runner_without, a.isolated)
+        rn = resolve_runner(a.agent, a.runner, a.runner_without, a.isolated, a.model)
         tasks = load_tasks(a.tasks, a.only)
         skill = skill_info(a.skill)
         blender = ws.blender()

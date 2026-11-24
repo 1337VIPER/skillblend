@@ -2,5 +2,96 @@
   "shader_model": "principled",
   "texturing": "procedural",
   "uses_shader_bevel": false,
-  "_notes": "Standard method: Principled BSDF, flat PBR values with procedural roughness break-up for review; final texturing happens after the bake."
+  "_notes": "Standard method: Principled BSDF, flat PBR values with procedural roughness break-up for review; final texturing happens after the bake. material_standard gives the built-in material names real PBR values, so a material is never left Blender's default grey when the artist's files showed no recipe for it.",
+  "material_standard": {
+    "Steel": {
+      "base_color": [
+        0.56,
+        0.57,
+        0.58
+      ],
+      "metallic": 1.0,
+      "roughness": 0.35
+    },
+    "SteelDark": {
+      "base_color": [
+        0.09,
+        0.09,
+        0.1
+      ],
+      "metallic": 1.0,
+      "roughness": 0.45
+    },
+    "Paint": {
+      "base_color": [
+        0.23,
+        0.3,
+        0.2
+      ],
+      "metallic": 0.0,
+      "roughness": 0.5
+    },
+    "PaintDark": {
+      "base_color": [
+        0.05,
+        0.055,
+        0.06
+      ],
+      "metallic": 0.0,
+      "roughness": 0.5
+    },
+    "Rubber": {
+      "base_color": [
+        0.02,
+        0.02,
+        0.02
+      ],
+      "metallic": 0.0,
+      "roughness": 0.85
+    },
+    "Plastic": {
+      "base_color": [
+        0.13,
+        0.13,
+        0.14
+      ],
+      "metallic": 0.0,
+      "roughness": 0.4
+    },
+    "Glass": {
+      "base_color": [
+        0.9,
+        0.95,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.05,
+      "transmission": 1.0,
+      "ior": 1.45
+    },
+    "Trim": {
+      "base_color": [
+        0.85,
+        0.5,
+        0.05
+      ],
+      "metallic": 0.0,
+      "roughness": 0.45
+    },
+    "Emissive": {
+      "base_color": [
+        0.05,
+        0.6,
+        0.8
+      ],
+      "metallic": 0.0,
+      "roughness": 0.4,
+      "emission_color": [
+        0.05,
+        0.6,
+        0.8
+      ],
+      "emission_strength": 4.0
+    }
+  }
 }

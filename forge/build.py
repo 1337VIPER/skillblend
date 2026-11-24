@@ -108,6 +108,7 @@ def build(ws, name=None, author=None, generic=False, exclude=(), include_example
     for f in ("style.py", "style_check.py"):
         shutil.copy2(os.path.join(paths.TEMPLATES, f), os.path.join(out, "scripts", f))
     shutil.copy2(os.path.join(paths.BLENDER, "analyse_blend.py"), os.path.join(out, "scripts", "analyse_blend.py"))
+    shutil.copy2(os.path.join(paths.BLENDER, "eval_thumb.py"), os.path.join(out, "scripts", "review_shot.py"))
     shutil.copy2(os.path.join(paths.LIB, "doclib.py"), os.path.join(out, "scripts", "doclib.py"))
     module_scripts = {}
     for m in mods:
@@ -323,11 +324,16 @@ def render_skill(sname, name, author, personal, mods, results, analyses, style, 
           "`style.setup_scene()`, `style.name()`, `style.box()`, `style.bevel()` (pick `tier=\"small\"`, `\"medium\"` or "
           "`\"large\"` by the edge's role), `style.finish()`, `style.subd()`, "
           "`style.cutter()`, `style.order_stack()`, `style.modifier()` (any modifier type, with the artist's typical settings), "
-          "`style.material()` (rebuilds the artist's measured material recipes), `style.setup_render()`, `style.kit_piece()` "
+          "`style.material(obj, name)` (the artist's measured recipe for that name, else the standard palette's; "
+          "`color=(r, g, b)` for a colour of your own), `style.setup_render()`, `style.kit_piece()` "
           "and `style.texel_density()` all use the numbers in `style.json`.",
           "- Before calling a model done, run `blender -b --factory-startup MODEL.blend --python <this skill>/scripts/style_check.py` "
           "and fix every warning, or tell the user why it's intended. It must end with `STYLE ok` or only notes you can explain.",
-          "- Render review shots (front, side, top, 3/4 and close-ups of the busiest areas) and compare them with the reference before adding detail."]
+          "- Give every part a material with a real colour, chosen for what the part is made of. A model left in Blender's default grey isn't finished, and neither is one with less detail than the brief asks for: the style rules say how to build, not how little to build.",
+          "- Then look at it. The style check can't see a cut that landed in the wrong place, a missing part or a wrong colour: "
+          "`blender -b --factory-startup MODEL.blend --python <this skill>/scripts/review_shot.py -- shot.png` (add `back`, `top`, `front` or `side` "
+          "for another view), open each picture, and check that everything the brief asks for is there and can be seen. Don't call a model done that you haven't looked at.",
+          "- With a reference, render the same views as it shows (front, side, top, 3/4 and close-ups of the busiest areas) and compare them before adding detail."]
     if copied:
         L += ["- Example files from the artist are in " + ", ".join(sorted({os.path.dirname(p) for v in copied.values() for p in v})) +
               ". When unsure how the artist would build something, open the closest example headless and study its "

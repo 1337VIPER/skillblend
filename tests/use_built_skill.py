@@ -20,7 +20,19 @@ knob = style.cylinder(style.name("radio knob"), 0.008, 0.01, segments=24, loc=(0
 hole = style.cylinder(style.name("speaker hole", role="cutter"), 0.02, 0.1, loc=(0, -0.02, 0.06))
 hole.rotation_euler = (math.radians(90), 0, 0)
 style.cutter(body, hole)
-for ob in (body, knob):
+# a cutter stays where the script put it, also off-centre and on a part that isn't at the origin
+side = style.box(style.name("side part"), (0.2, 0.1, 0.1), loc=(0.5, 0.3, 0.0), col=col)
+slot = style.box(style.name("side slot", role="cutter"), (0.05, 0.2, 0.02), loc=(0.56, 0.31, 0.04))
+tris_before = len(side.data.polygons)
+style.cutter(side, slot)
+bpy.context.view_layer.update()
+dg = bpy.context.evaluated_depsgraph_get()
+cut_faces = len(side.evaluated_get(dg).to_mesh().polygons)
+print("CUTTER", [round(v, 3) for v in slot.matrix_world.translation], [round(v, 3) for v in hole.matrix_world.translation], tris_before, cut_faces)
+if (abs(slot.matrix_world.translation.x - 0.56) < 1e-5 and abs(slot.matrix_world.translation.y - 0.31) < 1e-5
+        and abs(hole.matrix_world.translation.y + 0.02) < 1e-5 and cut_faces > tris_before):
+    print("CUTTER_OK")
+for ob in (body, knob, side):
     style.finish(ob)
     style.material(ob)
 print("STACK", [m.type for m in body.modifiers])
@@ -50,9 +62,16 @@ m.width = 0.2
 m.segments = 12
 bpy.ops.mesh.primitive_cylinder_add(radius=0.2, depth=1)
 cyl = bpy.context.active_object
+blank = bpy.data.materials.new("Blank")          # a material nobody gave a colour
+blank.use_nodes = True
+cube.data.materials.append(blank)
 b = cube.modifiers.new("Boolean", "BOOLEAN")
 b.object = cyl
 b.solver = "FLOAT" if "FLOAT" in [i.identifier for i in b.bl_rna.properties["solver"].enum_items] else "FAST"
+bpy.ops.mesh.primitive_cube_add(size=0.02)       # a cutter lost in the middle of the part: it cuts nothing you can see
+inner = bpy.context.active_object
+b2 = cube.modifiers.new("Boolean inner", "BOOLEAN")
+b2.object = inner
 bpy.ops.wm.save_as_mainfile(filepath=bad_path)
 print("USE_OK")
 
@@ -70,6 +89,15 @@ ramp = next((n for n in mat.node_tree.nodes if n.type == "VALTORGB"), None)
 if noise and ramp:
     print("DEEP noise", round(noise.inputs["Scale"].default_value, 3),
           round(ramp.color_ramp.elements[0].color[0], 3), round(ramp.color_ramp.elements[1].color[0], 3))
+# a name the files never showed gets the standard palette's values, by name or by what the name says; your own colour wins
+def base(m):
+    n = next(x for x in m.node_tree.nodes if x.type == "BSDF_PRINCIPLED")
+    return [round(c, 3) for c in n.inputs["Base Color"].default_value[:3]], round(n.inputs["Metallic"].default_value, 2)
+rub, gun, own = style.build_material("RubberGrip"), style.build_material("GunMetalDark"), style.build_material("CrateGreen", color=(0.2, 0.27, 0.19))
+print("STANDARD", base(rub), base(gun), base(own), [round(c, 3) for c in own.diffuse_color[:3]])
+if (max(base(rub)[0]) < 0.1 and base(gun)[1] == 1.0 and max(base(gun)[0]) < 0.2 and base(own)[0] == [0.2, 0.27, 0.19]
+        and [round(c, 3) for c in own.diffuse_color[:3]] == [0.2, 0.27, 0.19]):
+    print("STANDARD_OK")
 sc = style.setup_render()
 print("DEEP render", sc.render.engine, sc.view_settings.view_transform, sc.world is not None)
 print("DEEP_OK")

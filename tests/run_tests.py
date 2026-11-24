@@ -110,11 +110,23 @@ def main():
     out = blender_run(exe, "--python", os.path.join(HERE, "use_built_skill.py"), "--", pdir, good, bad)
     check("USE_OK" in out, "style.py builds a model")
     check("TIERS_OK" in out, "style.bevel uses the measured bevel tiers")
+    check("CUTTER_OK" in out, "style.cutter leaves a cutter where the script put it, and the cut lands there")
     check("DEEP_OK" in out and "DEEP solidify" in out, "style.modifier / style.material / style.setup_render work")
+    check("STANDARD_OK" in out, "style.material gives an unmeasured name the standard palette's values, and takes a colour of your own")
     out = blender_run(exe, good, "--python", os.path.join(pdir, "scripts", "style_check.py"))
     check("STYLE 0 warning" in out or "STYLE ok" in out, "a model built with style.py passes the check")
     out = blender_run(exe, bad, "--python", os.path.join(pdir, "scripts", "style_check.py"))
     check("Default names left" in out and "will render" in out, "a careless model fails the check")
+    check("default grey: Blank" in out, "a material left at Blender's default grey fails the check")
+    check("lie wholly inside it" in out, "a cutter lost inside its part fails the check")
+    shot = os.path.join(tmp, "shot.png")
+    blender_run(exe, good, "--python", os.path.join(pdir, "scripts", "review_shot.py"), "--", shot, "back")
+    # drawing a picture needs a graphics driver; a test machine without one (some CI runners) can't, and says so
+    can_draw = os.path.isfile(shot) and os.path.getsize(shot) > 2000
+    if can_draw:
+        check(True, "the skill's review_shot.py renders a picture of a model")
+    else:
+        print("  skip the skill's review_shot.py renders a picture (this machine can't draw: no graphics driver)")
 
     print("learn a project folder")
     ws2 = os.path.join(tmp, "ws2")
@@ -241,6 +253,14 @@ def main():
     check(os.path.isfile(os.path.join(rdir, "report.json")) and ev.get("headline", "x") in rmd and "(3 prompts;" in rmd
           and "not built (no model file)" in rmd and os.path.isfile(os.path.join(rdir, "scores", "with", "flashlight.json")),
           "eval score: report.md and report.json are written, with the headline and why a model wasn't built")
+    first = (ev["models"].get("with") or [{}])[0]
+    check("## The models" in rmd and (first.get("look") or {}).get("parts", 0) > 0 and "Parts per built model" in rmd
+          and "Materials given a colour" in rmd, "eval score: the report counts parts, triangles and coloured materials")
+    if can_draw:
+        check(os.path.isfile(os.path.join(rdir, "pictures", "with", "supply-crate.png")) and "![" in rmd,
+              "eval score: the report shows a picture of every model")
+    else:
+        check("(no picture)" in rmd, "eval score: the report says so when a picture can't be drawn")
     runner = f'"{exe}" -b --factory-startup --python "{standin}" -- {{arm}} "{{skill_dir}}" "{{out}}" {{task}}'
     os.environ["EVAL_STANDIN_SKIP"] = "flashlight:without"   # that runner "fails": it saves nothing
     code, out = forge(ws2, "eval", "run", "--skill", res2["dir"], "--runner", runner, "--only", "supply-crate,flashlight",

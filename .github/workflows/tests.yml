@@ -46,7 +46,7 @@ jobs:
       - name: Libraries Blender needs to start without a display
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libxkbcommon0 libsm6 libice6
+          sudo apt-get install -y --no-install-recommends libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libxkbcommon0 libsm6 libice6 libgl1-mesa-dri libegl-mesa0
       - name: Cache Blender
         id: cache
         uses: actions/cache@v4

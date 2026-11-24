@@ -15,7 +15,7 @@ import sys
 import os
 from collections import Counter
 
-VERSION = 6
+VERSION = 7
 
 
 def _r(x, n=6):
@@ -744,6 +744,28 @@ def _loose_parts(bm):
 
 
 # ---------------------------------------------------------------- objects
+def _world_bounds(ob):
+    from mathutils import Vector
+    pts = [ob.matrix_world @ Vector(c) for c in ob.bound_box]
+    return [min(p[i] for p in pts) for i in range(3)], [max(p[i] for p in pts) for i in range(3)]
+
+
+def cutter_fit(target, cut):
+    """How a boolean cutter sits against the part it cuts, from their bounding boxes in the scene:
+    "apart"   they don't touch, so the cut does nothing;
+    "inside"  the cutter is wholly inside the part, so it cuts a hidden hollow, not an opening;
+    "through" it reaches the part's surface.
+    A cutter that ended up in the wrong place (a build script that parented it before Blender refreshed its
+    position, for one) shows as "apart" or "inside"."""
+    (alo, ahi), (blo, bhi) = _world_bounds(target), _world_bounds(cut)
+    eps = 1e-6 + 1e-4 * max(ahi[i] - alo[i] for i in range(3))
+    if any(bhi[i] < alo[i] - eps or blo[i] > ahi[i] + eps for i in range(3)):
+        return "apart"
+    if all(blo[i] > alo[i] + eps and bhi[i] < ahi[i] - eps for i in range(3)):
+        return "inside"
+    return "through"
+
+
 def origin_in_bbox(obj):
     """Where the origin sits inside the object's local bounding box, 0..1 per axis."""
     xs = [c[0] for c in obj.bound_box]
@@ -783,6 +805,12 @@ def object_info(obj, depsgraph):
         "animated": bool(obj.animation_data and (obj.animation_data.action or obj.animation_data.drivers)),
         "drivers": len(obj.animation_data.drivers) if obj.animation_data else 0,
     }
+    for m, md in zip(obj.modifiers, d["modifiers"]):
+        if m.type == "BOOLEAN" and getattr(m, "object", None) is not None:
+            try:
+                md["cutter_fit"] = cutter_fit(obj, m.object)
+            except Exception:
+                pass
     if obj.type == "MESH":
         me = obj.data
         try:

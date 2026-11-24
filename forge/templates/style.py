@@ -47,6 +47,8 @@ def name(base, role=None):
         out = "-".join(w.lower() for w in words)
     elif case == "spaces":
         out = " ".join(words)
+    elif case == "mixed_underscore":
+        out = "_".join([words[0][:1].upper() + words[0][1:]] + [w.lower() for w in words[1:]]) if words else base
     else:
         out = "_".join(w.lower() for w in words)
     pref = get("naming_prefix", "") or ""
@@ -216,6 +218,14 @@ def subd(ob, levels=None, render=None):
     return m
 
 
+def _world(ob):
+    """An object's world matrix worked out from its own transform values. `matrix_world` is only refreshed when
+    Blender evaluates the scene, so for a part a script has just placed it is still the identity."""
+    if ob.parent is None:
+        return ob.matrix_basis.copy()
+    return _world(ob.parent) @ ob.matrix_parent_inverse @ ob.matrix_basis
+
+
 def cutter(target, cut, operation="DIFFERENCE", stack=True):
     """Cut `cut` out of `target` with a live Boolean, keeping the cutter the style's way."""
     cut.display_type = get("cutter_display", "WIRE")
@@ -226,10 +236,9 @@ def cutter(target, cut, operation="DIFFERENCE", stack=True):
         for c in list(cut.users_collection):
             c.objects.unlink(cut)
         col.objects.link(cut)
-    if cut.parent is None:
-        mw = cut.matrix_world.copy()
+    if cut.parent is None:  # parent it to what it cuts without moving it (see _world)
         cut.parent = target
-        cut.matrix_world = mw
+        cut.matrix_parent_inverse = _world(target).inverted()
     m = target.modifiers.new("Boolean", "BOOLEAN")
     m.operation = operation
     m.object = cut
@@ -298,17 +307,59 @@ def modifier(ob, mtype, name=None, **overrides):
 
 
 # ------------------------------------------------------------------ materials
+# what a material name usually means, for names the standard palette doesn't have (first match wins)
+MATERIAL_WORDS = (("Glass", ("glass", "lens", "window", "visor", "screen")),
+                  ("Emissive", ("emis", "glow", "led", "lamp", "neon", "light")),
+                  ("Rubber", ("rubber", "tyre", "tire", "grip", "gasket", "seal")),
+                  ("Steel", ("steel", "metal", "iron", "alumin", "chrome", "bolt", "screw", "brass", "copper")),
+                  ("Plastic", ("plastic", "polymer", "nylon", "abs")),
+                  ("Trim", ("trim", "accent", "stripe", "hazard", "warning")),
+                  ("Paint", ("paint", "enamel", "coat", "body", "shell", "panel")))
+
+
+def standard_recipe(name):
+    """The standard palette's values for a material name: by exact name, then by what the name says
+    ("RubberGrip" is rubber, "LensGlass" is glass, "GunMetalDark" is dark steel). None when nothing fits."""
+    std = get("material_standard") or {}
+    if name in std:
+        return dict(std[name])
+    low = name.lower()
+    dark = any(w in low for w in ("dark", "black", "gun"))
+    for key, words in MATERIAL_WORDS:
+        if any(w in low for w in words):
+            key = {"Steel": "SteelDark", "Paint": "PaintDark"}.get(key, key) if dark else key
+            if key in std:
+                return dict(std[key])
+    return None
+
+
 def recipe(name):
-    return (get("material_recipes") or {}).get(name)
+    """The values for a material name: the artist's measured recipe if their files showed one, else the standard
+    palette's. None means neither knows the name: give style.material() a colour yourself."""
+    return (get("material_recipes") or {}).get(name) or standard_recipe(name)
 
 
-def build_material(name):
-    """A new material built from the artist's measured recipe for `name` (or a plain Principled if none)."""
+def build_material(name, color=None, metallic=None, roughness=None):
+    """A new material for `name`: the artist's measured recipe, else the standard palette's, with your own
+    `color` (r, g, b), `metallic` and `roughness` on top. The viewport colour is set to match, so the model
+    reads right in solid view too."""
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
     p = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
-    rec = recipe(name) or {}
+    rec = dict(recipe(name) or {})
+    if color is not None:
+        rec["base_color"] = list(color)[:3]
+    if metallic is not None:
+        rec["metallic"] = float(metallic)
+    if roughness is not None:
+        rec["roughness"] = float(roughness)
+    if rec.get("base_color"):
+        m.diffuse_color = (*rec["base_color"][:3], 1.0)
+    if "metallic" in rec:
+        m.metallic = float(rec["metallic"])
+    if "roughness" in rec:
+        m.roughness = float(rec["roughness"])
     if p is None:
         return m
     if rec.get("base_color"):
@@ -351,11 +402,14 @@ def build_material(name):
     return m
 
 
-def material(ob, name=None):
-    """Assign a material by name (default: the first in the style's palette). A new material is built from the
-    artist's measured recipe for that name, so values and procedural break-up match their own materials."""
+def material(ob, name=None, color=None, metallic=None, roughness=None):
+    """Assign a material by name (default: the first in the style's palette). A new material gets the artist's
+    measured recipe for that name, so values and procedural break-up match their own materials; a name their files
+    didn't show gets the standard palette's values (Steel, SteelDark, Paint, PaintDark, Rubber, Plastic, Glass, Trim,
+    Emissive, or the nearest by what the name says). For any other surface pass `color=(r, g, b)` (linear RGB),
+    and `metallic` / `roughness` if needed. Never leave a material Blender's default grey."""
     name = name or (get("material_palette") or list((get("material_recipes") or {}).keys()) or ["Material"])[0]
-    m = bpy.data.materials.get(name) or build_material(name)
+    m = bpy.data.materials.get(name) or build_material(name, color, metallic, roughness)
     if ob.data.materials:
         ob.data.materials[0] = m
     else:

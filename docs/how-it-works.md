@@ -225,6 +225,10 @@ A skill installed before the manifest existed (0.1 to 0.4) is handled the same w
 
 A run is a folder, `workspace/eval/<run>/` (`--name`, or the date and time; a taken name gets `-2`, `-3`): one working folder per prompt and arm with its `PROMPT.md` and `runner.log`, `models/`, `scores/`, `report.md` and `report.json`.
 
+The score only says how closely a model follows the style, so the report also shows what the score can't: one picture of every model (`pictures/<arm>/`, all rendered by `forge/blender/eval_thumb.py` from the same angle, in the same light, on the same backdrop, each material in its own colour) and, per model, the number of parts, triangles and materials that were given a colour. Read them together. On the first real runs the skill's models had fewer warnings and looked plainer, and the pictures are what showed why. The same script ships in every skill as `scripts/review_shot.py`, and the skill tells the AI to look at its model before calling it done.
+
+`eval run --model M` pins both arms of a preset to one model. Without it the arms can run on different models, because they load different settings.
+
 ## 11. Workspace layout
 
 `workspace/` sits next to `skillblend.py` (set `FORGE_WORKSPACE` to move it) and is ignored by git:

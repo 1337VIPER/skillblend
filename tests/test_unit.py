@@ -294,6 +294,64 @@ def model_row(name, warnings=0, notes=0, built=True, module="setup-and-scale"):
 
 
 class Eval(Temp):
+
+    def test_look_counts_what_the_score_does_not(self):
+        from forge import evalkit
+        grey = {"name": "Blank", "use_nodes": True, "principled": {"values": {"Base Color": [0.8, 0.8, 0.8, 1.0], "Metallic": 0.0}, "linked": {}}}
+        red = {"name": "Red", "use_nodes": True, "principled": {"values": {"Base Color": [0.6, 0.05, 0.05, 1.0], "Metallic": 0.0}, "linked": {}}}
+        tex = {"name": "Textured", "use_nodes": True, "principled": {"values": {}, "linked": {"Base Color": "TEX_IMAGE"}}}
+        an = {"materials": [grey, red, tex], "objects": [
+            {"type": "MESH", "name": "body", "materials": ["Blank"], "mesh": {"eval_tri_count": 100}, "modifiers": [{"type": "BOOLEAN", "object": "cut"}]},
+            {"type": "MESH", "name": "lid", "materials": ["Red.001", "Textured"], "mesh": {"tri_count": 12}, "modifiers": []},
+            {"type": "MESH", "name": "cut", "materials": [], "mesh": {"tri_count": 12}, "modifiers": []},
+            {"type": "MESH", "name": "guide", "display_type": "WIRE", "materials": [], "mesh": {"tri_count": 6}, "modifiers": []},
+            {"type": "MESH", "name": "bare", "materials": [], "mesh": {"tri_count": 2}, "modifiers": []}]}
+        k = evalkit.look(an)
+        self.assertEqual((k["parts"], k["tris"], k["materials"], k["coloured"], k["blank"], k["no_material"]),
+                         (3, 114, 3, 2, ["Blank"], 1))
+
+    def test_cutter_in_the_wrong_place_check(self):
+        spec = importlib.util.spec_from_file_location("bool_check", os.path.join(REPO, "modules", "booleans-and-cutters", "check.py"))
+        sys.path.insert(0, os.path.join(REPO, "forge", "lib"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        cutter = lambda n: {"type": "MESH", "name": n, "modifiers": [], "display_type": "WIRE", "hide_render": True}
+        body = {"type": "MESH", "name": "lid", "modifiers": [
+            {"type": "BOOLEAN", "name": "a", "object": "vent_1", "solver": "EXACT", "cutter_fit": "inside"},
+            {"type": "BOOLEAN", "name": "b", "object": "vent_2", "solver": "EXACT", "cutter_fit": "inside"},
+            {"type": "BOOLEAN", "name": "c", "object": "slot", "solver": "EXACT", "cutter_fit": "apart"},
+            {"type": "BOOLEAN", "name": "d", "object": "panel", "solver": "EXACT", "cutter_fit": "through"}]}
+        doc = {"objects": [body] + [cutter(n) for n in ("vent_1", "vent_2", "slot", "panel")]}
+        warns = [m for s, m in mod.check(doc, {"boolean_solver": "EXACT", "cutter_display": "WIRE"}) if s == "warn"]
+        self.assertEqual(len(warns), 2, warns)
+        self.assertTrue(any("2 cutter(s) lie wholly inside" in m and "vent_1, vent_2" in m for m in warns))
+        self.assertTrue(any("1 cutter(s) don't touch" in m and "slot" in m for m in warns))
+        body["modifiers"] = body["modifiers"][3:]
+        self.assertEqual([m for s, m in mod.check(doc, {"boolean_solver": "EXACT", "cutter_display": "WIRE"}) if s == "warn"], [])
+
+    def test_blank_material_check(self):
+        spec = importlib.util.spec_from_file_location("mat_check", os.path.join(REPO, "modules", "materials-and-slots", "check.py"))
+        sys.path.insert(0, os.path.join(REPO, "forge", "lib"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        grey = {"name": "Steel", "users": 1, "use_nodes": True, "principled": {"values": {"Base Color": [0.8, 0.8, 0.8, 1.0], "Metallic": 0.0}, "linked": {}}}
+        doc = {"objects": [{"type": "MESH", "name": "body", "materials": ["Steel"], "modifiers": []}], "materials": [grey]}
+        msgs = [m for s, m in mod.check(doc, {}) if s == "warn"]
+        self.assertTrue(any("default grey: Steel" in m for m in msgs), msgs)
+        # the artist's own recipe for that name is that grey: not a fault
+        self.assertFalse([m for s, m in mod.check(doc, {"material_recipes": {"Steel": {"base_color": [0.8, 0.8, 0.8]}}}) if "default grey" in m])
+        grey["principled"]["values"]["Base Color"] = [0.56, 0.57, 0.58, 1.0]
+        self.assertFalse([m for s, m in mod.check(doc, {}) if "default grey" in m])
+
+    def test_model_pins_both_arms_of_a_preset(self):
+        from forge import evalkit
+        rn = evalkit.resolve_runner("claude", model="some-model")
+        self.assertTrue(rn["with"].endswith("--model some-model"))
+        self.assertTrue(rn["without"].endswith("--model some-model"))
+        self.assertEqual(rn["model"], "some-model")
+        self.assertIsNone(evalkit.resolve_runner("claude")["model"])
+        with self.assertRaises(ValueError):
+            evalkit.resolve_runner(runner="mytool {out}", model="some-model")
     def test_built_in_tasks(self):
         tasks = E.load_tasks()
         self.assertGreaterEqual(len(tasks), 6)
